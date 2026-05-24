@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import {
   ALL_SOURCES,
   PRIMARY_SOURCES,
+  INTERNATIONAL_SOURCES,
   MEDIA_SOURCES,
   REGULATOR_SOURCES,
   COMPETITOR_SOURCES,
@@ -112,11 +113,15 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
     const absolute = absUrl(href, source.feedUrl);
     if (!isNewsLink(absolute, source.id)) continue;
 
-    const title = $a
-      .text()
+    const rawTitle = source.titleSelector
+      ? $a.find(source.titleSelector).first().text() || $a.text()
+      : $a.text();
+    const title = rawTitle
       .trim()
       .replace(/\s+/g, " ")
-      .replace(/^20\d{2}[年./-]\d{1,2}[月./-]\d{1,2}日?\s*/, "");
+      .replace(/^20\d{2}[年./-]\d{1,2}[月./-]\d{1,2}日?\s*/, "")
+      .replace(/（PDFファイル[^）]*）/g, "")
+      .trim();
     if (!title || title.length < 4) continue;
     if (seen.has(absolute)) continue;
     seen.add(absolute);
@@ -148,6 +153,13 @@ function isNewsLink(url: string, sourceId: SourceId): boolean {
   if (sourceId === "nttdata") {
     return /nttdata\.com\/.*\/news\/(release|topics)\//.test(url);
   }
+  if (sourceId === "nttud") {
+    return (
+      /nttud\.co\.jp\/news\/detail\//.test(url) ||
+      /nttud\.co\.jp\/news_pdf\//.test(url) ||
+      /nttud\.co\.jp\/news\/.*\.html/.test(url)
+    );
+  }
   return true;
 }
 
@@ -171,21 +183,24 @@ export async function fetchSource(sourceId: SourceId): Promise<SourceFeed> {
   }
 }
 
-export async function fetchPrimary(): Promise<SourceFeed[]> {
-  return Promise.all(PRIMARY_SOURCES.map((s) => fetchSource(s.id)));
-}
-
-export async function fetchExtended(): Promise<{
+export type AllFeeds = {
+  primary: SourceFeed[];
+  international: SourceFeed[];
   media: SourceFeed[];
   regulator: SourceFeed[];
   competitor: SourceFeed[];
-}> {
-  const [media, regulator, competitor] = await Promise.all([
-    Promise.all(MEDIA_SOURCES.map((s) => fetchSource(s.id))),
-    Promise.all(REGULATOR_SOURCES.map((s) => fetchSource(s.id))),
-    Promise.all(COMPETITOR_SOURCES.map((s) => fetchSource(s.id))),
-  ]);
-  return { media, regulator, competitor };
+};
+
+export async function fetchAllGrouped(): Promise<AllFeeds> {
+  const [primary, international, media, regulator, competitor] =
+    await Promise.all([
+      Promise.all(PRIMARY_SOURCES.map((s) => fetchSource(s.id))),
+      Promise.all(INTERNATIONAL_SOURCES.map((s) => fetchSource(s.id))),
+      Promise.all(MEDIA_SOURCES.map((s) => fetchSource(s.id))),
+      Promise.all(REGULATOR_SOURCES.map((s) => fetchSource(s.id))),
+      Promise.all(COMPETITOR_SOURCES.map((s) => fetchSource(s.id))),
+    ]);
+  return { primary, international, media, regulator, competitor };
 }
 
 export async function fetchAll(): Promise<SourceFeed[]> {

@@ -1,18 +1,24 @@
 export type SourceId =
   | "ntt"
+  | "nttdata"
+  | "docomo"
+  | "nttud"
   | "ntt-east"
   | "ntt-west"
-  | "docomo"
-  | "docomo-business"
-  | "nttdata"
   | "ntt-global"
+  | "docomo-business"
   | "media-ntt"
   | "soumu"
   | "kddi"
   | "softbank"
   | "rakuten-mobile";
 
-export type SourceKind = "primary" | "media" | "regulator" | "competitor";
+export type SourceKind =
+  | "primary"
+  | "international"
+  | "media"
+  | "regulator"
+  | "competitor";
 
 export type Source = {
   id: SourceId;
@@ -24,18 +30,55 @@ export type Source = {
   feedType: "rss" | "scrape";
   feedUrl: string;
   kind: SourceKind;
+  titleSelector?: string;
 };
 
+// Tab 1: 国内主要(順序はユーザー指定: N, データ, ドコモ, アーバン, 東日本, 西日本)
 export const PRIMARY_SOURCES: Source[] = [
   {
     id: "ntt",
     name: "NTT(持株会社)",
-    shortName: "NTT",
+    shortName: "N",
     color: "#0033A0",
     homepage: "https://group.ntt/jp/",
     newsPage: "https://group.ntt/jp/newsrelease/",
     feedType: "rss",
     feedUrl: "https://group.ntt/jp/newsrelease/rss/release.rdf",
+    kind: "primary",
+  },
+  {
+    id: "nttdata",
+    name: "NTTデータ",
+    shortName: "データ",
+    color: "#1E4E9E",
+    homepage: "https://www.nttdata.com/jp/ja/",
+    newsPage: "https://www.nttdata.com/jp/ja/news/",
+    feedType: "scrape",
+    feedUrl: "https://www.nttdata.com/jp/ja/news/",
+    kind: "primary",
+  },
+  {
+    id: "docomo",
+    name: "NTTドコモ",
+    shortName: "ドコモ",
+    color: "#CC0033",
+    homepage: "https://www.docomo.ne.jp/",
+    newsPage: "https://www.docomo.ne.jp/info/news_release/",
+    feedType: "rss",
+    feedUrl: "https://www.docomo.ne.jp/info/rss/news_release.rdf",
+    kind: "primary",
+  },
+  {
+    id: "nttud",
+    name: "NTT都市開発",
+    shortName: "アーバン",
+    color: "#0F7B6C",
+    homepage: "https://www.nttud.co.jp/",
+    newsPage:
+      "https://news.google.com/search?q=%22NTT%E9%83%BD%E5%B8%82%E9%96%8B%E7%99%BA%22&hl=ja&gl=JP&ceid=JP:ja",
+    feedType: "rss",
+    feedUrl:
+      "https://news.google.com/rss/search?q=%22NTT%E9%83%BD%E5%B8%82%E9%96%8B%E7%99%BA%22&hl=ja&gl=JP&ceid=JP:ja",
     kind: "primary",
   },
   {
@@ -60,16 +103,20 @@ export const PRIMARY_SOURCES: Source[] = [
     feedUrl: "https://www.ntt-west.co.jp/news/",
     kind: "primary",
   },
+];
+
+// Tab 2: 国外・関連
+export const INTERNATIONAL_SOURCES: Source[] = [
   {
-    id: "docomo",
-    name: "NTTドコモ",
-    shortName: "ドコモ",
-    color: "#CC0033",
-    homepage: "https://www.docomo.ne.jp/",
-    newsPage: "https://www.docomo.ne.jp/info/news_release/",
+    id: "ntt-global",
+    name: "NTT Global (EN)",
+    shortName: "Global",
+    color: "#1A1A1A",
+    homepage: "https://group.ntt/en/",
+    newsPage: "https://group.ntt/en/newsrelease/",
     feedType: "rss",
-    feedUrl: "https://www.docomo.ne.jp/info/rss/news_release.rdf",
-    kind: "primary",
+    feedUrl: "https://group.ntt/en/newsrelease/rss/release.rdf",
+    kind: "international",
   },
   {
     id: "docomo-business",
@@ -80,32 +127,11 @@ export const PRIMARY_SOURCES: Source[] = [
     newsPage: "https://www.ntt.com/about-us/press-releases.html",
     feedType: "scrape",
     feedUrl: "https://www.ntt.com/about-us/press-releases.html",
-    kind: "primary",
-  },
-  {
-    id: "nttdata",
-    name: "NTTデータ",
-    shortName: "データ",
-    color: "#1E4E9E",
-    homepage: "https://www.nttdata.com/jp/ja/",
-    newsPage: "https://www.nttdata.com/jp/ja/news/",
-    feedType: "scrape",
-    feedUrl: "https://www.nttdata.com/jp/ja/news/",
-    kind: "primary",
-  },
-  {
-    id: "ntt-global",
-    name: "NTT Global (EN)",
-    shortName: "Global",
-    color: "#1A1A1A",
-    homepage: "https://group.ntt/en/",
-    newsPage: "https://group.ntt/en/newsrelease/",
-    feedType: "rss",
-    feedUrl: "https://group.ntt/en/newsrelease/rss/release.rdf",
-    kind: "primary",
+    kind: "international",
   },
 ];
 
+// Tab 3-A: メディア
 export const MEDIA_SOURCES: Source[] = [
   {
     id: "media-ntt",
@@ -122,6 +148,7 @@ export const MEDIA_SOURCES: Source[] = [
   },
 ];
 
+// Tab 3-B: 規制
 export const REGULATOR_SOURCES: Source[] = [
   {
     id: "soumu",
@@ -136,6 +163,7 @@ export const REGULATOR_SOURCES: Source[] = [
   },
 ];
 
+// Tab 4: 競合
 export const COMPETITOR_SOURCES: Source[] = [
   {
     id: "kddi",
@@ -180,6 +208,7 @@ export const COMPETITOR_SOURCES: Source[] = [
 
 export const ALL_SOURCES: Source[] = [
   ...PRIMARY_SOURCES,
+  ...INTERNATIONAL_SOURCES,
   ...MEDIA_SOURCES,
   ...REGULATOR_SOURCES,
   ...COMPETITOR_SOURCES,
@@ -190,7 +219,3 @@ export function getSource(id: SourceId): Source {
   if (!s) throw new Error(`Unknown source: ${id}`);
   return s;
 }
-
-// Backwards-compatible alias for existing imports.
-export const SOURCES = PRIMARY_SOURCES;
-export type CompanyId = SourceId;
