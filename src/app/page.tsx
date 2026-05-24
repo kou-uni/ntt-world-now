@@ -2,7 +2,10 @@ import { fetchAll } from "@/lib/fetchers";
 import { Dashboard } from "@/components/Dashboard";
 import { Hero } from "@/components/Hero";
 
-export const revalidate = false;
+// Vercel デプロイ対策: 静的事前生成を避け、毎リクエスト動的に描画
+// (Next.js 16 のビルド出力が静的事前生成だと404になるケースの回避策)
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default async function HomePage() {
   const feeds = await fetchAll();
