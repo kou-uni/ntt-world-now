@@ -12,18 +12,18 @@ type Props = {
 
 export function TierFilter({ selected, onToggle, onReset }: Props) {
   return (
-    <div className="mb-6">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="mono-label">tier · media type</span>
+    <div className="mb-7">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="mono-label">メディア種別</span>
         <button
           type="button"
           onClick={onReset}
           className="mono-label transition-colors hover:text-[var(--foreground)] hover:underline"
         >
-          reset
+          リセット
         </button>
       </div>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1.5">
         {TIERS.map((t) => {
           const isOn = selected.has(t.id);
           return (
@@ -36,7 +36,7 @@ export function TierFilter({ selected, onToggle, onReset }: Props) {
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.3, ease: EASE_PREMIUM }}
               className={
-                "inline-flex items-baseline gap-1.5 rounded-md border px-2.5 py-1.5 text-[11.5px] font-light tracking-tight transition-colors duration-300 " +
+                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[14px] font-medium tracking-tight transition-colors duration-300 " +
                 (isOn
                   ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
                   : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--foreground)]")
@@ -50,7 +50,7 @@ export function TierFilter({ selected, onToggle, onReset }: Props) {
                   : undefined
               }
             >
-              <span className="font-mono text-[10px] font-medium">{t.id}</span>
+              <span className="font-mono text-[11px] font-bold">{t.id}</span>
               <span>{t.label}</span>
             </motion.button>
           );

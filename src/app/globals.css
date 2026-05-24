@@ -3,11 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #000000;
-  --border: #ededed;
-  --border-strong: #d4d4d4;
-  --muted: #737373;
-  --muted-2: #a3a3a3;
-  --subtle: #fafafa;
+  --border: #e5e5e5;
+  --border-strong: #c8c8c8;
+  /* コントラストUP: 高齢者にも見やすい濃度 (WCAG AA以上) */
+  --muted: #525252;
+  --muted-2: #8a8a8a;
+  --subtle: #f7f7f7;
   --accent: #000000;
 }
 
@@ -26,30 +27,31 @@
   :root {
     --background: #000000;
     --foreground: #f5f5f5;
-    --border: #1a1a1a;
-    --border-strong: #2a2a2a;
-    --muted: #888888;
-    --muted-2: #525252;
-    --subtle: #0a0a0a;
+    --border: #232323;
+    --border-strong: #3a3a3a;
+    --muted: #b0b0b0;
+    --muted-2: #707070;
+    --subtle: #0c0c0c;
     --accent: #ffffff;
   }
 }
 
 html {
-  font-size: 16px;
+  /* base 16 → 17px。bodyや指定px値はそのままだがremベース要素が拡大 */
+  font-size: 17px;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: var(--font-sans);
-  /* palt:詰め組 / ss01,cv11:Geistの代替字形 / ss06:鋭いdot系 */
   font-feature-settings: "palt", "ss01", "ss03", "cv11", "cv09";
   font-variation-settings: "opsz" auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  letter-spacing: -0.015em;
+  /* 字間は控えめ。詰めすぎは可読性を落とす */
+  letter-spacing: -0.01em;
   background: var(--background);
   color: var(--foreground);
   font-weight: 400;
@@ -57,8 +59,8 @@ body {
 
 /* Display headings: light + tighter */
 h1, h2, h3, h4 {
-  letter-spacing: -0.04em;
-  font-weight: 300;
+  letter-spacing: -0.035em;
+  font-weight: 400;
 }
 
 /* Number rendering — tabular for data */
@@ -70,7 +72,7 @@ h1, h2, h3, h4 {
 /* Mono labels — uppercase chrome metadata */
 .mono-label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 500;
@@ -79,9 +81,9 @@ h1, h2, h3, h4 {
 
 /* Display: 大見出し用 */
 .display {
-  font-weight: 200;
-  letter-spacing: -0.055em;
-  line-height: 0.95;
+  font-weight: 300;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
 }
 
 /* Hide horizontal scrollbar */

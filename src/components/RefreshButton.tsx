@@ -22,7 +22,6 @@ export function RefreshButton() {
       startTransition(() => router.refresh());
     } finally {
       setLoading(false);
-      // 少し遅延させてProgressBarが100%まで描画される時間を確保
       setTimeout(() => end(), 300);
     }
   };
@@ -36,15 +35,15 @@ export function RefreshButton() {
       whileHover={busy ? undefined : { y: -1 }}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.25, ease: EASE_PREMIUM }}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--border)] bg-transparent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.15em] transition-colors hover:border-[var(--foreground)] disabled:opacity-40"
+      className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.12em] transition-colors hover:border-[var(--foreground)] disabled:opacity-40"
     >
       <motion.svg
         viewBox="0 0 24 24"
-        width="12"
-        height="12"
+        width="15"
+        height="15"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
         animate={busy ? { rotate: 360 } : { rotate: 0 }}
@@ -57,7 +56,7 @@ export function RefreshButton() {
         <path d="M21 12a9 9 0 1 1-3-6.7" />
         <path d="M21 4v5h-5" />
       </motion.svg>
-      {busy ? "syncing" : "refresh"}
+      {busy ? "更新中" : "更新"}
     </motion.button>
   );
 }

@@ -99,19 +99,19 @@ export function Dashboard({ feeds }: Props) {
 
       <TierFilter selected={tiers} onToggle={toggleTier} onReset={resetTiers} />
 
-      <div className="mb-3 flex items-center justify-between border-t border-[var(--border)] pt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--muted)]">
+      <div className="mb-4 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--muted)]">
         <span className="tabular-nums">
           <motion.span
             key={filtered.length}
             initial={{ opacity: 0, y: -3, filter: "blur(3px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 0.4, ease: EASE_PREMIUM }}
-            className="inline-block text-[var(--foreground)]"
+            className="inline-block font-bold text-[var(--foreground)]"
           >
             {filtered.length}
           </motion.span>{" "}
-          results
-          {crossRegion ? " · all regions" : ""}
+          件
+          {crossRegion ? " · 全エリア" : ""}
         </span>
         <AnimatePresence>
           {query && (
@@ -120,9 +120,9 @@ export function Dashboard({ feeds }: Props) {
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, x: 6, filter: "blur(4px)" }}
               transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-              className="truncate font-light normal-case tracking-tight"
+              className="truncate font-normal normal-case tracking-tight"
             >
-              <span className="text-[var(--muted-2)]">query:</span>{" "}
+              <span className="text-[var(--muted-2)]">検索:</span>{" "}
               <span className="text-[var(--foreground)]">{query}</span>
             </motion.span>
           )}
@@ -137,9 +137,9 @@ export function Dashboard({ feeds }: Props) {
             animate={{ opacity: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, filter: "blur(6px)" }}
             transition={{ duration: 0.5, ease: EASE_PREMIUM }}
-            className="border-t border-[var(--border)] py-20 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]"
+            className="border-t border-[var(--border)] py-20 text-center text-[15px] text-[var(--muted)]"
           >
-            no results
+            条件に合うニュースが見つかりません
           </motion.div>
         ) : (
           <motion.div
@@ -147,7 +147,7 @@ export function Dashboard({ feeds }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, ease: EASE_PREMIUM }}
-            className="sm:grid sm:grid-cols-2 sm:gap-2 lg:grid-cols-3 xl:grid-cols-4"
+            className="sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
           >
             {visibleItems.map((it, i) => (
               <NewsCard key={it.id} item={it} index={i} />

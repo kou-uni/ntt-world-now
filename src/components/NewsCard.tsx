@@ -46,18 +46,18 @@ export function NewsCard({ item, index }: Props) {
               transition: { duration: 0.4, ease: EASE_PREMIUM },
             }
       }
-      className="group relative flex flex-col gap-2.5 border-b border-[var(--border)] py-4 transition-colors duration-300 hover:bg-[var(--subtle)] sm:rounded-lg sm:border sm:px-4 sm:py-4 sm:hover:border-[var(--foreground)]"
+      className="group relative flex flex-col gap-3 border-b border-[var(--border)] py-5 transition-colors duration-300 hover:bg-[var(--subtle)] sm:rounded-xl sm:border sm:px-5 sm:py-5 sm:hover:border-[var(--foreground)]"
     >
-      <div className="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.15em] text-[var(--muted)]">
-        <span className="font-medium text-[var(--foreground)]">
+      <div className="flex items-center gap-2 font-mono text-[11.5px] uppercase tracking-[0.12em] text-[var(--muted)]">
+        <span className="font-bold text-[var(--foreground)]">
           {source.tier}
         </span>
         <span className="text-[var(--border-strong)]">/</span>
-        <span className="truncate font-light">{source.shortName}</span>
+        <span className="truncate">{source.shortName}</span>
         <span className="text-[var(--border-strong)]">·</span>
         <time
           dateTime={item.publishedAt}
-          className="tabular-nums shrink-0 font-light"
+          className="tabular-nums shrink-0"
         >
           {formatJpDate(item.publishedAt)}
         </time>
@@ -70,7 +70,7 @@ export function NewsCard({ item, index }: Props) {
               duration: 0.55,
               ease: EASE_PREMIUM,
             }}
-            className="ml-auto rounded-sm bg-[var(--foreground)] px-1 py-px text-[9px] font-medium text-[var(--background)]"
+            className="ml-auto rounded-md bg-[var(--foreground)] px-1.5 py-0.5 text-[10.5px] font-bold text-[var(--background)]"
             style={{
               boxShadow:
                 "0 0 12px -2px color-mix(in srgb, var(--foreground) 50%, transparent)",
@@ -81,12 +81,12 @@ export function NewsCard({ item, index }: Props) {
         )}
       </div>
 
-      <p className="text-[14.5px] font-normal leading-[1.45] tracking-tight text-[var(--foreground)] transition-colors duration-300 group-hover:underline group-hover:decoration-[var(--muted-2)] group-hover:underline-offset-2 sm:text-[14px]">
+      <p className="text-[17px] font-medium leading-[1.5] tracking-[-0.005em] text-[var(--foreground)] transition-colors duration-300 group-hover:underline group-hover:decoration-[var(--muted-2)] group-hover:underline-offset-4 sm:text-[16px]">
         {item.title}
       </p>
 
       {item.matchedBrands && item.matchedBrands.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {item.matchedBrands.slice(0, 4).map((b, bi) => (
             <motion.span
               key={b}
@@ -97,7 +97,7 @@ export function NewsCard({ item, index }: Props) {
                 duration: 0.5,
                 ease: EASE_PREMIUM,
               }}
-              className="rounded-sm border border-[var(--border)] px-1.5 py-0.5 font-mono text-[9px] font-light uppercase tracking-[0.12em] text-[var(--muted)] transition-colors duration-300 group-hover:border-[var(--border-strong)] group-hover:text-[var(--foreground)]"
+              className="rounded-md border border-[var(--border)] px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--muted)] transition-colors duration-300 group-hover:border-[var(--border-strong)] group-hover:text-[var(--foreground)]"
             >
               {b}
             </motion.span>
