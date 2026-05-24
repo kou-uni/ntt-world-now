@@ -1,19 +1,33 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { Noto_Sans_JP } from "next/font/google";
+import { LoadingProvider } from "@/components/LoadingProvider";
+import { TopProgressBar, HeaderShimmer } from "@/components/TopProgressBar";
 import "./globals.css";
 
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "NTTグループ ニュースダッシュボード",
+  title: "NTT World Now",
   description:
-    "NTT・NTT東日本・NTT西日本・NTTドコモ・NTTドコモビジネスの最新ニュース・経営情報を俯瞰",
+    "Global news aggregator — NTTグループおよび旧買収企業・VC投資先",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export default function RootLayout({
@@ -22,30 +36,60 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${notoSansJp.variable} h-full antialiased`}>
-      <body className="min-h-full bg-neutral-50 font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-        <header className="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-900 dark:bg-neutral-950/80">
-          <div className="mx-auto flex max-w-[1760px] items-center justify-between px-8 py-5">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="inline-block h-7 w-1.5 rounded-full bg-[#0033A0]" />
-              <span className="text-[20px] font-bold tracking-tight">
-                NTTグループ ニュースダッシュボード
+    <html
+      lang="ja"
+      className={`${GeistSans.variable} ${GeistMono.variable} ${notoSansJp.variable} h-full`}
+    >
+      <body className="min-h-full font-sans">
+        <LoadingProvider>
+          <TopProgressBar />
+          <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/70 backdrop-blur-2xl pt-safe">
+            <HeaderShimmer />
+            <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-3.5 sm:px-8">
+              <Link href="/" className="group flex items-baseline gap-2">
+                <span className="font-mono text-[12px] font-medium uppercase tracking-[0.18em] transition-colors group-hover:text-[var(--foreground)]">
+                  NTT
+                </span>
+                <span className="font-mono text-[11px] font-light uppercase tracking-[0.2em] text-[var(--muted)] transition-colors group-hover:text-[var(--foreground)]">
+                  World Now
+                </span>
+              </Link>
+              <nav className="flex items-center gap-0.5 font-mono text-[11px] uppercase tracking-[0.15em]">
+                <Link
+                  href="/"
+                  className="rounded-md px-2.5 py-1.5 font-medium hover:bg-[var(--subtle)]"
+                >
+                  news
+                </Link>
+                <Link
+                  href="/ir"
+                  className="rounded-md px-2.5 py-1.5 font-light text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                >
+                  ir
+                </Link>
+                <Link
+                  href="/sources"
+                  className="rounded-md px-2.5 py-1.5 font-light text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                >
+                  sources
+                </Link>
+              </nav>
+            </div>
+          </header>
+
+          <main className="mx-auto max-w-[1400px] px-5 pb-16 pt-6 sm:px-8 sm:pt-10">
+            {children}
+          </main>
+
+          <footer className="mx-auto max-w-[1400px] border-t border-[var(--border)] px-5 py-6 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] sm:px-8 pb-safe">
+            <div className="flex items-center justify-between">
+              <span>NTT World Now</span>
+              <span className="text-[var(--muted-2)]">
+                global news aggregator
               </span>
-            </Link>
-            <nav className="flex items-center gap-6 text-[15px] font-medium text-neutral-600 dark:text-neutral-300">
-              <Link href="/" className="hover:text-neutral-900 dark:hover:text-white">
-                ニュース
-              </Link>
-              <Link href="/ir" className="hover:text-neutral-900 dark:hover:text-white">
-                IR・経営戦略
-              </Link>
-            </nav>
-          </div>
-        </header>
-        <main className="mx-auto max-w-[1760px] px-8 py-8">{children}</main>
-        <footer className="mx-auto max-w-[1760px] px-8 pb-10 pt-4 text-[13px] text-neutral-500">
-          各社の公式ニュースリリースおよびIRページから取得した情報を表示しています。
-        </footer>
+            </div>
+          </footer>
+        </LoadingProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "IR・経営戦略 | NTTグループ ニュースダッシュボード",
+  title: "IR · NTT World",
 };
 
 type IrLink = {
@@ -12,7 +12,7 @@ type IrLink = {
 
 const HOLDING_IR: IrLink[] = [
   {
-    title: "IRトップ(NTT)",
+    title: "IR Top",
     description: "決算・株主還元・統合報告書など最新IR情報",
     url: "https://group.ntt/jp/ir/",
   },
@@ -27,12 +27,12 @@ const HOLDING_IR: IrLink[] = [
     url: "https://group.ntt/jp/ir/mgt/managementstrategy/",
   },
   {
-    title: "統合報告書 / アニュアルレポート",
-    description: "最新の統合報告書",
+    title: "統合報告書",
+    description: "最新の統合報告書・アニュアルレポート",
     url: "https://group.ntt/jp/ir/library/annual/",
   },
   {
-    title: "IRニュース・適時開示",
+    title: "IRニュース",
     description: "適時開示情報・IRニュースリリース",
     url: "https://group.ntt/jp/ir/news/",
   },
@@ -40,89 +40,101 @@ const HOLDING_IR: IrLink[] = [
 
 const SUBSIDIARY_IR: IrLink[] = [
   {
-    title: "NTT東日本 企業情報",
+    title: "NTT東日本",
     description: "ニュースリリース・会社概要",
     url: "https://www.ntt-east.co.jp/info/",
   },
   {
-    title: "NTT西日本 企業情報",
+    title: "NTT西日本",
     description: "ニュースリリース・会社概要",
     url: "https://www.ntt-west.co.jp/corporate/",
   },
   {
-    title: "NTTドコモ IR・投資家情報",
-    description: "業績ハイライト・株主向け情報(持株経由)",
+    title: "NTTドコモ IR",
+    description: "業績ハイライト・株主向け情報（持株経由）",
     url: "https://group.ntt/jp/ir/",
   },
   {
-    title: "NTTドコモビジネス 企業情報",
+    title: "NTTドコモビジネス",
     description: "ニュースリリース・会社概要",
     url: "https://www.ntt.com/about-us.html",
   },
+  {
+    title: "NTT DATA Group",
+    description: "Global press releases / IR",
+    url: "https://www.nttdata.com/global/en/news/",
+  },
 ];
 
-function Card({ link, accent }: { link: IrLink; accent: string }) {
+function Row({ link }: { link: IrLink }) {
   return (
     <a
       href={link.url}
       target="_blank"
       rel="noreferrer noopener"
-      className="group block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-neutral-300 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-neutral-700"
+      className="group flex items-center justify-between gap-4 border-b border-[var(--border)] py-3 transition hover:bg-[var(--subtle)] sm:rounded-md sm:border sm:px-4 sm:py-3 sm:hover:border-[var(--foreground)]"
     >
-      <div className="flex items-center gap-3">
-        <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${accent}`} />
-        <h3 className="text-[18px] font-semibold tracking-tight group-hover:underline">
+      <div className="min-w-0 flex-1">
+        <h3 className="text-[14px] font-medium tracking-tight text-[var(--foreground)] group-hover:underline">
           {link.title}
         </h3>
+        <p className="mt-0.5 text-[12px] text-[var(--muted)]">
+          {link.description}
+        </p>
       </div>
-      <p className="mt-2 text-[14px] leading-relaxed text-neutral-600 dark:text-neutral-400">
-        {link.description}
-      </p>
-      <span className="mt-3 inline-flex text-[13px] text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-neutral-200">
-        公式ページを開く →
-      </span>
+      <svg
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="shrink-0 text-[var(--muted)] group-hover:text-[var(--foreground)]"
+      >
+        <path d="M7 17 17 7" />
+        <path d="M7 7h10v10" />
+      </svg>
     </a>
+  );
+}
+
+function Section({ label, links }: { label: string; links: IrLink[] }) {
+  return (
+    <section className="mb-8">
+      <h2 className="mb-2 font-mono text-[10.5px] uppercase tracking-wider text-[var(--muted)]">
+        {label}
+      </h2>
+      <div className="sm:grid sm:grid-cols-2 sm:gap-2 lg:grid-cols-3">
+        {links.map((l) => (
+          <Row key={l.url} link={l} />
+        ))}
+      </div>
+    </section>
   );
 }
 
 export default function IrPage() {
   return (
     <>
-      <section className="mb-7">
-        <div className="text-[13px] text-neutral-500">
-          <Link href="/" className="hover:underline">
-            ← ダッシュボードに戻る
-          </Link>
-        </div>
-        <h1 className="mt-2 text-[28px] font-bold tracking-tight">
-          IR・経営戦略
+      <div className="mb-5">
+        <Link
+          href="/"
+          className="font-mono text-[10.5px] uppercase tracking-wider text-[var(--muted)] hover:text-[var(--foreground)]"
+        >
+          ← back
+        </Link>
+        <h1 className="mt-2 text-[22px] font-semibold tracking-tight sm:text-[26px]">
+          IR · 公式
         </h1>
-        <p className="mt-1.5 text-[15px] text-neutral-600 dark:text-neutral-400">
-          NTT(持株会社)のIR情報および各社の企業情報リンク集
+        <p className="mt-1 text-[13px] text-[var(--muted)]">
+          NTT持株会社・グループ各社の公式IR・企業情報リンク集
         </p>
-      </section>
+      </div>
 
-      <section className="mb-10">
-        <h2 className="mb-4 text-[20px] font-semibold tracking-tight">
-          NTT(持株会社)
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {HOLDING_IR.map((l) => (
-            <Card key={l.url} link={l} accent="bg-[#0033A0]" />
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-[20px] font-semibold tracking-tight">
-          グループ会社
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {SUBSIDIARY_IR.map((l) => (
-            <Card key={l.url} link={l} accent="bg-neutral-400" />
-          ))}
-        </div>
-      </section>
+      <Section label="持株会社" links={HOLDING_IR} />
+      <Section label="グループ会社" links={SUBSIDIARY_IR} />
     </>
   );
 }

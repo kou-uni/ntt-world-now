@@ -1,29 +1,279 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  --background: #ffffff;
+  --foreground: #000000;
+  --border: #ededed;
+  --border-strong: #d4d4d4;
+  --muted: #737373;
+  --muted-2: #a3a3a3;
+  --subtle: #fafafa;
+  --accent: #000000;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans), var(--font-noto-sans-jp), ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000000;
+    --foreground: #f5f5f5;
+    --border: #1a1a1a;
+    --border-strong: #2a2a2a;
+    --muted: #888888;
+    --muted-2: #525252;
+    --subtle: #0a0a0a;
+    --accent: #ffffff;
   }
 }
 
 html {
   font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "palt";
+  /* palt:詰め組 / ss01,cv11:Geistの代替字形 / ss06:鋭いdot系 */
+  font-feature-settings: "palt", "ss01", "ss03", "cv11", "cv09";
+  font-variation-settings: "opsz" auto;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.015em;
+  background: var(--background);
+  color: var(--foreground);
+  font-weight: 400;
+}
+
+/* Display headings: light + tighter */
+h1, h2, h3, h4 {
+  letter-spacing: -0.04em;
+  font-weight: 300;
+}
+
+/* Number rendering — tabular for data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv11";
+}
+
+/* Mono labels — uppercase chrome metadata */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Display: 大見出し用 */
+.display {
+  font-weight: 200;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+/* Hide horizontal scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe-area for iOS */
+@supports (padding: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Focus ring — minimal */
+*:focus-visible {
+  outline: 1px solid var(--foreground);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Page-level subtle fade-in on first paint */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+main {
+  animation: pageEnter 0.85s cubic-bezier(0.32, 0.72, 0, 1) both;
+  position: relative;
+  z-index: 1;
+}
+
+/* Premium hover baseline */
+.premium-hover {
+  transition-property: color, background-color, border-color, transform, opacity, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ===== Aurora: ゆっくり回るconicグラデで広範囲に柔らかい光を散らす ===== */
+@keyframes auroraRotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes auroraDrift {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 140vmax;
+  height: 140vmax;
+  pointer-events: none;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    color-mix(in srgb, var(--foreground) 6%, transparent) 18%,
+    transparent 30%,
+    color-mix(in srgb, var(--foreground) 4%, transparent) 55%,
+    transparent 70%,
+    color-mix(in srgb, var(--foreground) 5%, transparent) 88%,
+    transparent 100%
+  );
+  filter: blur(80px);
+  animation:
+    auroraRotate 60s linear infinite,
+    auroraDrift 18s ease-in-out infinite;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse at top,
+    color-mix(in srgb, var(--foreground) 4%, transparent) 0%,
+    transparent 50%
+  );
+}
+
+/* ===== Text shimmer: テキストは常時foregroundで表示し、
+   その上を半透明のhighlight overlayが流れる方式（消失バグ回避）===== */
+@keyframes textShimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+.shimmer-text {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  isolation: isolate;
+}
+.shimmer-text::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    105deg,
+    transparent 38%,
+    color-mix(in srgb, var(--background) 75%, transparent) 50%,
+    transparent 62%
+  );
+  background-size: 220% 100%;
+  background-position: 150% 0;
+  animation: textShimmer 7s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 2s;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+@media (prefers-color-scheme: dark) {
+  .shimmer-text::after {
+    background-image: linear-gradient(
+      105deg,
+      transparent 38%,
+      color-mix(in srgb, var(--foreground) 30%, transparent) 50%,
+      transparent 62%
+    );
+    mix-blend-mode: screen;
+  }
+}
+
+/* Header / main wrapper above aurora */
+header,
+footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* 日本語の太さ補正：light/regular中心で運用 */
+:lang(ja) {
+  font-feature-settings: "palt", "ss01";
+}
+
+/* Input native style reset */
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
