@@ -1,221 +1,673 @@
-export type SourceId =
-  | "ntt"
-  | "nttdata"
-  | "docomo"
-  | "nttud"
-  | "ntt-east"
-  | "ntt-west"
-  | "ntt-global"
-  | "docomo-business"
-  | "media-ntt"
-  | "soumu"
-  | "kddi"
-  | "softbank"
-  | "rakuten-mobile";
+import type { Source } from "./types";
 
-export type SourceKind =
-  | "primary"
-  | "international"
-  | "media"
-  | "regulator"
-  | "competitor";
+/**
+ * NTTグループ関連の検索キーワード。
+ * 「NTT」名を含まない旧買収ブランド・VC投資先まで含める。
+ * 詳細はメモリ project_nApp_ntt_brands.md 参照。
+ */
+export const NTT_BRANDS = {
+  core: ["NTT", "DOCOMO", "NTT DATA", "NTT Ltd"],
+  // NTT DATA系（コンサル/SI）
+  dataGroup: ["Dimension Data", "everis", "itelligence", "Sapphire Systems"],
+  // NTT Ltd系（DC/ネットワーク/セキュリティ）
+  ltdGroup: [
+    "Arkadin",
+    "e-shelter",
+    "Netmagic",
+    "RagingWire",
+    "Secure-24",
+    "WhiteHat Security",
+    "Gyron",
+    "Transatel",
+    "Oakton",
+    "Emerio",
+    "CAPSiDE",
+  ],
+  // 最新買収 2025-2026
+  recent: ["Zero & One", "Niveus Solutions", "Applicable"],
+  // DOCOMO Ventures主要投資先
+  vcPortfolio: [
+    "Dialpad",
+    "Auth0",
+    "Riskified",
+    "Ayar Labs",
+    "ElevenLabs",
+    "Wasabi",
+    "Soracom",
+    "ABEJA",
+    "ThreatQuotient",
+  ],
+  // 資本提携
+  affiliates: ["Globe Telecom"],
+} as const;
 
-export type Source = {
-  id: SourceId;
-  name: string;
-  shortName: string;
-  color: string;
-  homepage: string;
-  newsPage: string;
-  feedType: "rss" | "scrape";
-  feedUrl: string;
-  kind: SourceKind;
-  titleSelector?: string;
-};
-
-// Tab 1: 国内主要(順序はユーザー指定: N, データ, ドコモ, アーバン, 東日本, 西日本)
-export const PRIMARY_SOURCES: Source[] = [
-  {
-    id: "ntt",
-    name: "NTT(持株会社)",
-    shortName: "N",
-    color: "#0033A0",
-    homepage: "https://group.ntt/jp/",
-    newsPage: "https://group.ntt/jp/newsrelease/",
-    feedType: "rss",
-    feedUrl: "https://group.ntt/jp/newsrelease/rss/release.rdf",
-    kind: "primary",
-  },
-  {
-    id: "nttdata",
-    name: "NTTデータ",
-    shortName: "データ",
-    color: "#1E4E9E",
-    homepage: "https://www.nttdata.com/jp/ja/",
-    newsPage: "https://www.nttdata.com/jp/ja/news/",
-    feedType: "scrape",
-    feedUrl: "https://www.nttdata.com/jp/ja/news/",
-    kind: "primary",
-  },
-  {
-    id: "docomo",
-    name: "NTTドコモ",
-    shortName: "ドコモ",
-    color: "#CC0033",
-    homepage: "https://www.docomo.ne.jp/",
-    newsPage: "https://www.docomo.ne.jp/info/news_release/",
-    feedType: "rss",
-    feedUrl: "https://www.docomo.ne.jp/info/rss/news_release.rdf",
-    kind: "primary",
-  },
-  {
-    id: "nttud",
-    name: "NTT都市開発",
-    shortName: "アーバン",
-    color: "#0F7B6C",
-    homepage: "https://www.nttud.co.jp/",
-    newsPage:
-      "https://news.google.com/search?q=%22NTT%E9%83%BD%E5%B8%82%E9%96%8B%E7%99%BA%22&hl=ja&gl=JP&ceid=JP:ja",
-    feedType: "rss",
-    feedUrl:
-      "https://news.google.com/rss/search?q=%22NTT%E9%83%BD%E5%B8%82%E9%96%8B%E7%99%BA%22&hl=ja&gl=JP&ceid=JP:ja",
-    kind: "primary",
-  },
-  {
-    id: "ntt-east",
-    name: "NTT東日本",
-    shortName: "東日本",
-    color: "#E60012",
-    homepage: "https://www.ntt-east.co.jp/",
-    newsPage: "https://www.ntt-east.co.jp/release/",
-    feedType: "rss",
-    feedUrl: "https://www.ntt-east.co.jp/rss/release.rdf",
-    kind: "primary",
-  },
-  {
-    id: "ntt-west",
-    name: "NTT西日本",
-    shortName: "西日本",
-    color: "#00A0E9",
-    homepage: "https://www.ntt-west.co.jp/",
-    newsPage: "https://www.ntt-west.co.jp/news/",
-    feedType: "scrape",
-    feedUrl: "https://www.ntt-west.co.jp/news/",
-    kind: "primary",
-  },
+export const ALL_BRAND_KEYWORDS: string[] = [
+  ...NTT_BRANDS.core,
+  ...NTT_BRANDS.dataGroup,
+  ...NTT_BRANDS.ltdGroup,
+  ...NTT_BRANDS.recent,
+  ...NTT_BRANDS.vcPortfolio,
+  ...NTT_BRANDS.affiliates,
 ];
 
-// Tab 2: 国外・関連
-export const INTERNATIONAL_SOURCES: Source[] = [
-  {
-    id: "ntt-global",
-    name: "NTT Global (EN)",
-    shortName: "Global",
-    color: "#1A1A1A",
-    homepage: "https://group.ntt/en/",
-    newsPage: "https://group.ntt/en/newsrelease/",
-    feedType: "rss",
-    feedUrl: "https://group.ntt/en/newsrelease/rss/release.rdf",
-    kind: "international",
-  },
-  {
-    id: "docomo-business",
-    name: "NTTドコモビジネス",
-    shortName: "ドコモビジネス",
-    color: "#0066CC",
-    homepage: "https://www.ntt.com/",
-    newsPage: "https://www.ntt.com/about-us/press-releases.html",
-    feedType: "scrape",
-    feedUrl: "https://www.ntt.com/about-us/press-releases.html",
-    kind: "international",
-  },
-];
+/**
+ * Google News RSS 用クエリ。OR検索。
+ * 「NTT」だけだと野球（NTT West vs ...）が混ざるのでノイズ除外を入れる。
+ */
+function gnewsQuery(brands: readonly string[], extraExclude = ""): string {
+  const orClause = brands.map((b) => `"${b}"`).join(" OR ");
+  const exclude = "-野球 -baseball -football -hockey -サッカー";
+  return encodeURIComponent(`(${orClause}) ${exclude} ${extraExclude}`.trim());
+}
 
-// Tab 3-A: メディア
-export const MEDIA_SOURCES: Source[] = [
+function gnewsRss(region: {
+  hl: string;
+  gl: string;
+  ceid: string;
+}, q: string): string {
+  return `https://news.google.com/rss/search?q=${q}&hl=${region.hl}&gl=${region.gl}&ceid=${region.ceid}`;
+}
+
+// 旧買収ブランド系（地域報道で頻出）
+const BRAND_QUERY = gnewsQuery([
+  ...NTT_BRANDS.core,
+  ...NTT_BRANDS.dataGroup,
+  ...NTT_BRANDS.ltdGroup,
+  ...NTT_BRANDS.recent,
+  ...NTT_BRANDS.affiliates,
+]);
+
+// VC関連ニュース用（NTT AND 投資先）
+const VC_QUERY = encodeURIComponent(
+  `"NTT" (${NTT_BRANDS.vcPortfolio.map((b) => `"${b}"`).join(" OR ")})`
+);
+
+export const SOURCES: Source[] = [
+  // ========================================================================
+  // GLOBAL — T1 国際通信社 / T2 主要紙 / T3 業界紙 / T4 テック
+  // ========================================================================
   {
-    id: "media-ntt",
-    name: "メディア報道(NTT)",
-    shortName: "メディア",
-    color: "#737373",
+    id: "reuters-tech",
+    name: "Reuters Technology",
+    shortName: "Reuters",
+    homepage: "https://www.reuters.com/technology/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:reuters.com (${["NTT", "DOCOMO", "NTT DATA", "Dimension Data"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T1",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "bloomberg",
+    name: "Bloomberg",
+    shortName: "Bloomberg",
+    homepage: "https://www.bloomberg.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:bloomberg.com (${["NTT", "DOCOMO", "NTT DATA"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T1",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "ft",
+    name: "Financial Times",
+    shortName: "FT",
+    homepage: "https://www.ft.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:ft.com (${["NTT", "DOCOMO", "NTT DATA", "Dimension Data"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T2",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "bbc-business",
+    name: "BBC Business",
+    shortName: "BBC",
+    homepage: "https://www.bbc.com/business",
+    feedUrl: gnewsRss(
+      { hl: "en-GB", gl: "GB", ceid: "GB:en" },
+      encodeURIComponent(`site:bbc.com (${["NTT", "DOCOMO", "Dimension Data"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T2",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "lightreading",
+    name: "Light Reading",
+    shortName: "Light Reading",
+    homepage: "https://www.lightreading.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:lightreading.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T3",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "telecoms-com",
+    name: "Telecoms.com",
+    shortName: "Telecoms.com",
+    homepage: "https://www.telecoms.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:telecoms.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T3",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "mobile-world-live",
+    name: "Mobile World Live",
+    shortName: "MWL",
+    homepage: "https://www.mobileworldlive.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:mobileworldlive.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T3",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "capacity-media",
+    name: "Capacity Media",
+    shortName: "Capacity",
+    homepage: "https://www.capacitymedia.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:capacitymedia.com (${["NTT", "DOCOMO", "Dimension Data"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T3",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "techcrunch",
+    name: "TechCrunch",
+    shortName: "TechCrunch",
+    homepage: "https://techcrunch.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:techcrunch.com (${["NTT", "DOCOMO", "Dialpad", "Ayar Labs", "ElevenLabs"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T4",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "theverge",
+    name: "The Verge",
+    shortName: "Verge",
+    homepage: "https://www.theverge.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:theverge.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T4",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "wired",
+    name: "WIRED",
+    shortName: "WIRED",
+    homepage: "https://www.wired.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:wired.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T4",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "the-information",
+    name: "The Information",
+    shortName: "The Information",
+    homepage: "https://www.theinformation.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:theinformation.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T4",
+    region: "global",
+    isAggregator: true,
+  },
+
+  // T5 投資・金融
+  {
+    id: "seeking-alpha",
+    name: "Seeking Alpha",
+    shortName: "Seeking Alpha",
+    homepage: "https://seekingalpha.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:seekingalpha.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T5",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "barrons",
+    name: "Barron's",
+    shortName: "Barron's",
+    homepage: "https://www.barrons.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:barrons.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T5",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "nikkei-asia",
+    name: "Nikkei Asia",
+    shortName: "Nikkei Asia",
+    homepage: "https://asia.nikkei.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:asia.nikkei.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T5",
+    region: "global",
+    isAggregator: true,
+  },
+
+  // T6 VC・思想
+  {
+    id: "stratechery",
+    name: "Stratechery",
+    shortName: "Stratechery",
+    homepage: "https://stratechery.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:stratechery.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T6",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "a16z",
+    name: "Andreessen Horowitz",
+    shortName: "a16z",
+    homepage: "https://a16z.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-US", gl: "US", ceid: "US:en" },
+      encodeURIComponent(`site:a16z.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
+    ),
+    feedType: "rss",
+    tier: "T6",
+    region: "global",
+    isAggregator: true,
+  },
+  {
+    id: "vc-portfolio-watch",
+    name: "NTT VC投資先ウォッチ",
+    shortName: "VC Watch",
+    homepage: "https://www.nttdocomo-v.com/en/portfolio/",
+    feedUrl: gnewsRss({ hl: "en-US", gl: "US", ceid: "US:en" }, VC_QUERY),
+    feedType: "rss",
+    tier: "T6",
+    region: "global",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // NORTH AMERICA
+  // ========================================================================
+  {
+    id: "gnews-us",
+    name: "米国メディア（横断）",
+    shortName: "US",
     homepage: "https://news.google.com/",
-    newsPage:
-      "https://news.google.com/search?q=NTT&hl=ja&gl=JP&ceid=JP:ja",
+    feedUrl: gnewsRss({ hl: "en-US", gl: "US", ceid: "US:en" }, BRAND_QUERY),
     feedType: "rss",
-    feedUrl:
-      "https://news.google.com/rss/search?q=NTT+-%E3%83%A9%E3%82%B0%E3%83%93%E3%83%BC+-%E3%83%AA%E3%83%BC%E3%82%B0%E3%83%AF%E3%83%B3+-%E9%87%8E%E7%90%83+-%E3%82%B5%E3%83%83%E3%82%AB%E3%83%BC&hl=ja&gl=JP&ceid=JP:ja",
-    kind: "media",
+    tier: "T2",
+    region: "north-america",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-canada",
+    name: "カナダメディア（横断）",
+    shortName: "Canada",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-CA", gl: "CA", ceid: "CA:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "north-america",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // EUROPE
+  // ========================================================================
+  {
+    id: "gnews-uk",
+    name: "英国メディア（横断）",
+    shortName: "UK",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-GB", gl: "GB", ceid: "GB:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "europe",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-germany",
+    name: "ドイツメディア（横断）",
+    shortName: "Germany",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "de", gl: "DE", ceid: "DE:de" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "europe",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-france",
+    name: "フランスメディア（横断）",
+    shortName: "France",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "fr", gl: "FR", ceid: "FR:fr" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "europe",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-italy",
+    name: "イタリアメディア（横断）",
+    shortName: "Italy",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "it", gl: "IT", ceid: "IT:it" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "europe",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-spain",
+    name: "スペインメディア（横断）",
+    shortName: "Spain",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "es", gl: "ES", ceid: "ES:es" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "europe",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // SOUTHEAST ASIA
+  // ========================================================================
+  {
+    id: "gnews-singapore",
+    name: "シンガポールメディア",
+    shortName: "Singapore",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-SG", gl: "SG", ceid: "SG:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-indonesia",
+    name: "インドネシアメディア",
+    shortName: "Indonesia",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "id", gl: "ID", ceid: "ID:id" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-philippines",
+    name: "フィリピンメディア（Globe Telecom含む）",
+    shortName: "Philippines",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss(
+      { hl: "en-PH", gl: "PH", ceid: "PH:en" },
+      encodeURIComponent(
+        `("NTT" OR "DOCOMO" OR "Globe Telecom") -野球 -baseball -football`
+      )
+    ),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-thailand",
+    name: "タイメディア",
+    shortName: "Thailand",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "th", gl: "TH", ceid: "TH:th" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-vietnam",
+    name: "ベトナムメディア",
+    shortName: "Vietnam",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "vi", gl: "VN", ceid: "VN:vi" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-malaysia",
+    name: "マレーシアメディア",
+    shortName: "Malaysia",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-MY", gl: "MY", ceid: "MY:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-india",
+    name: "インドメディア（Netmagic含む）",
+    shortName: "India",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-IN", gl: "IN", ceid: "IN:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "southeast-asia",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // MIDDLE EAST
+  // ========================================================================
+  {
+    id: "gnews-uae",
+    name: "UAEメディア（Zero & One含む）",
+    shortName: "UAE",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-AE", gl: "AE", ceid: "AE:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "middle-east",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-saudi",
+    name: "サウジアラビアメディア",
+    shortName: "Saudi Arabia",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "ar", gl: "SA", ceid: "SA:ar" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "middle-east",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-israel",
+    name: "イスラエルメディア（Riskified等）",
+    shortName: "Israel",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-IL", gl: "IL", ceid: "IL:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "middle-east",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // AFRICA
+  // ========================================================================
+  {
+    id: "gnews-south-africa",
+    name: "南アフリカメディア（Dimension Data発祥）",
+    shortName: "South Africa",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-ZA", gl: "ZA", ceid: "ZA:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "africa",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-nigeria",
+    name: "ナイジェリアメディア",
+    shortName: "Nigeria",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-NG", gl: "NG", ceid: "NG:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "africa",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-kenya",
+    name: "ケニアメディア",
+    shortName: "Kenya",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "en-KE", gl: "KE", ceid: "KE:en" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "africa",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // LATIN AMERICA
+  // ========================================================================
+  {
+    id: "gnews-brazil",
+    name: "ブラジルメディア（everis拠点）",
+    shortName: "Brazil",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "pt-BR", gl: "BR", ceid: "BR:pt" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "latin-america",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-mexico",
+    name: "メキシコメディア",
+    shortName: "Mexico",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss({ hl: "es-419", gl: "MX", ceid: "MX:es-419" }, BRAND_QUERY),
+    feedType: "rss",
+    tier: "T2",
+    region: "latin-america",
+    isAggregator: true,
+  },
+
+  // ========================================================================
+  // JAPAN（世界の中の一つとして並列扱い）
+  // ========================================================================
+  {
+    id: "gnews-japan",
+    name: "日本メディア横断",
+    shortName: "JP メディア",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss(
+      { hl: "ja", gl: "JP", ceid: "JP:ja" },
+      encodeURIComponent(`NTT -ラグビー -リーグワン -野球 -サッカー`)
+    ),
+    feedType: "rss",
+    tier: "T2",
+    region: "japan",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-japan-tech",
+    name: "日本テックメディア",
+    shortName: "JP Tech",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss(
+      { hl: "ja", gl: "JP", ceid: "JP:ja" },
+      encodeURIComponent(
+        `(site:itmedia.co.jp OR site:nikkei.com OR site:impress.co.jp OR site:techcrunch.com) NTT -ラグビー -野球`
+      )
+    ),
+    feedType: "rss",
+    tier: "T4",
+    region: "japan",
+    isAggregator: true,
+  },
+  {
+    id: "gnews-japan-business",
+    name: "日本ビジネス・投資",
+    shortName: "JP Business",
+    homepage: "https://news.google.com/",
+    feedUrl: gnewsRss(
+      { hl: "ja", gl: "JP", ceid: "JP:ja" },
+      encodeURIComponent(
+        `(site:nikkei.com OR site:diamond.jp OR site:toyokeizai.net OR site:reuters.com) NTT -ラグビー -野球`
+      )
+    ),
+    feedType: "rss",
+    tier: "T5",
+    region: "japan",
+    isAggregator: true,
   },
 ];
 
-// Tab 3-B: 規制
-export const REGULATOR_SOURCES: Source[] = [
-  {
-    id: "soumu",
-    name: "総務省",
-    shortName: "総務省",
-    color: "#5D6D7E",
-    homepage: "https://www.soumu.go.jp/",
-    newsPage: "https://www.soumu.go.jp/menu_news/s-news/",
-    feedType: "rss",
-    feedUrl: "https://www.soumu.go.jp/news.rdf",
-    kind: "regulator",
-  },
-];
-
-// Tab 4: 競合
-export const COMPETITOR_SOURCES: Source[] = [
-  {
-    id: "kddi",
-    name: "KDDI",
-    shortName: "KDDI",
-    color: "#EB5505",
-    homepage: "https://newsroom.kddi.com/",
-    newsPage:
-      "https://news.google.com/search?q=KDDI&hl=ja&gl=JP&ceid=JP:ja",
-    feedType: "rss",
-    feedUrl:
-      "https://news.google.com/rss/search?q=KDDI&hl=ja&gl=JP&ceid=JP:ja",
-    kind: "competitor",
-  },
-  {
-    id: "softbank",
-    name: "ソフトバンク",
-    shortName: "ソフトバンク",
-    color: "#A6A6A6",
-    homepage: "https://www.softbank.jp/corp/news/",
-    newsPage:
-      "https://news.google.com/search?q=%22%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E6%A0%AA%E5%BC%8F%E4%BC%9A%E7%A4%BE+OR+%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB%22&hl=ja&gl=JP&ceid=JP:ja",
-    feedType: "rss",
-    feedUrl:
-      "https://news.google.com/rss/search?q=%22%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E6%A0%AA%E5%BC%8F%E4%BC%9A%E7%A4%BE+OR+%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB%22&hl=ja&gl=JP&ceid=JP:ja",
-    kind: "competitor",
-  },
-  {
-    id: "rakuten-mobile",
-    name: "楽天モバイル",
-    shortName: "楽天",
-    color: "#BF0000",
-    homepage: "https://corp.mobile.rakuten.co.jp/",
-    newsPage:
-      "https://news.google.com/search?q=%E6%A5%BD%E5%A4%A9%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB&hl=ja&gl=JP&ceid=JP:ja",
-    feedType: "rss",
-    feedUrl:
-      "https://news.google.com/rss/search?q=%E6%A5%BD%E5%A4%A9%E3%83%A2%E3%83%90%E3%82%A4%E3%83%AB+-%E9%87%8E%E7%90%83+-%E3%82%A4%E3%83%BC%E3%82%B0%E3%83%AB%E3%82%B9+-%E3%83%9E%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%BA+-%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%84&hl=ja&gl=JP&ceid=JP:ja",
-    kind: "competitor",
-  },
-];
-
-export const ALL_SOURCES: Source[] = [
-  ...PRIMARY_SOURCES,
-  ...INTERNATIONAL_SOURCES,
-  ...MEDIA_SOURCES,
-  ...REGULATOR_SOURCES,
-  ...COMPETITOR_SOURCES,
-];
-
-export function getSource(id: SourceId): Source {
-  const s = ALL_SOURCES.find((x) => x.id === id);
+export function getSource(id: string): Source {
+  const s = SOURCES.find((x) => x.id === id);
   if (!s) throw new Error(`Unknown source: ${id}`);
   return s;
+}
+
+export function sourcesByRegion(region: string): Source[] {
+  return SOURCES.filter((s) => s.region === region);
 }
