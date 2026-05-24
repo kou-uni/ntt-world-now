@@ -14,7 +14,7 @@ const parser = new Parser({
 async function fetchRss(source: Source): Promise<NewsItem[]> {
   const res = await fetch(source.feedUrl, {
     headers: { "User-Agent": UA },
-    next: { revalidate: 3600, tags: ["news", `news:${source.id}`] },
+    next: { revalidate: false, tags: ["news", `news:${source.id}`] },
   });
   if (!res.ok) throw new Error(`RSS ${source.feedUrl} -> HTTP ${res.status}`);
   const xml = await res.text();
@@ -55,7 +55,7 @@ function absUrl(href: string, base: string): string {
 async function fetchScrape(source: Source): Promise<NewsItem[]> {
   const res = await fetch(source.feedUrl, {
     headers: { "User-Agent": UA },
-    next: { revalidate: 3600, tags: ["news", `news:${source.id}`] },
+    next: { revalidate: false, tags: ["news", `news:${source.id}`] },
   });
   if (!res.ok) throw new Error(`HTML ${source.feedUrl} -> HTTP ${res.status}`);
   const html = await res.text();

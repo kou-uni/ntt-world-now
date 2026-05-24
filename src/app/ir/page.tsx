@@ -22,9 +22,9 @@ const HOLDING_IR: IrLink[] = [
     url: "https://group.ntt/jp/ir/library/results/",
   },
   {
-    title: "中期経営計画 / 経営戦略",
-    description: "新中期経営戦略の説明資料",
-    url: "https://group.ntt/jp/ir/management/strategy/",
+    title: "中期経営戦略",
+    description: "新中期経営戦略の説明資料・経営方針",
+    url: "https://group.ntt/jp/ir/mgt/managementstrategy/",
   },
   {
     title: "統合報告書 / アニュアルレポート",
@@ -47,7 +47,7 @@ const SUBSIDIARY_IR: IrLink[] = [
   {
     title: "NTT西日本 企業情報",
     description: "ニュースリリース・会社概要",
-    url: "https://www.ntt-west.co.jp/info/",
+    url: "https://www.ntt-west.co.jp/corporate/",
   },
   {
     title: "NTTドコモ IR・投資家情報",

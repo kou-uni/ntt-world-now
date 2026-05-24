@@ -4,7 +4,7 @@ import { RefreshButton } from "@/components/RefreshButton";
 import { formatJpDateTime } from "@/lib/format";
 import { SOURCES } from "@/lib/sources";
 
-export const revalidate = 3600;
+export const revalidate = false;
 
 export default async function HomePage() {
   const feeds = await fetchAll();
@@ -19,16 +19,20 @@ export default async function HomePage() {
   return (
     <>
       <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] font-bold tracking-tight">
-            主要5社のニュースを一目で
-          </h1>
-          <p className="mt-1.5 text-[15px] text-neutral-600 dark:text-neutral-400">
+        <div className="max-w-2xl">
+          <p className="text-[17px] leading-relaxed text-neutral-700 dark:text-neutral-300">
+            NTTグループ主要5社の最新ニュースリリースをキャッチアップできます。
+          </p>
+          <p className="mt-1.5 text-[14px] text-neutral-500">
             最終取得: <span className="tabular-nums">{formatJpDateTime(fetchedAt)}</span>
-            <span className="ml-2 text-neutral-400">/ 自動更新: 毎時</span>
           </p>
         </div>
-        <RefreshButton />
+        <div className="flex flex-col items-end gap-1.5">
+          <RefreshButton />
+          <span className="text-[13px] text-neutral-500">
+            このボタンを押すと全て最新化されます
+          </span>
+        </div>
       </section>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
