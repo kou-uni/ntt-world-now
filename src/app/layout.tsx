@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="ja" className={`${notoSansJp.variable} h-full antialiased`}>
       <body className="min-h-full bg-neutral-50 font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
         <header className="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-neutral-900 dark:bg-neutral-950/80">
-          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-8 py-5">
+          <div className="mx-auto flex max-w-[1760px] items-center justify-between px-8 py-5">
             <Link href="/" className="flex items-center gap-3">
               <span className="inline-block h-7 w-1.5 rounded-full bg-[#0033A0]" />
               <span className="text-[20px] font-bold tracking-tight">
@@ -42,8 +42,8 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
-        <main className="mx-auto max-w-[1600px] px-8 py-8">{children}</main>
-        <footer className="mx-auto max-w-[1600px] px-8 pb-10 pt-4 text-[13px] text-neutral-500">
+        <main className="mx-auto max-w-[1760px] px-8 py-8">{children}</main>
+        <footer className="mx-auto max-w-[1760px] px-8 pb-10 pt-4 text-[13px] text-neutral-500">
           各社の公式ニュースリリースおよびIRページから取得した情報を表示しています。
         </footer>
       </body>

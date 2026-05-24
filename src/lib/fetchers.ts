@@ -1,13 +1,25 @@
 import Parser from "rss-parser";
 import * as cheerio from "cheerio";
-import { SOURCES, getSource, type CompanyId, type Source } from "./sources";
-import type { CompanyFeed, NewsItem } from "./types";
+import {
+  ALL_SOURCES,
+  PRIMARY_SOURCES,
+  MEDIA_SOURCES,
+  REGULATOR_SOURCES,
+  COMPETITOR_SOURCES,
+  getSource,
+  type SourceId,
+  type Source,
+} from "./sources";
+import type { SourceFeed, NewsItem } from "./types";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 const parser = new Parser({
-  headers: { "User-Agent": UA, Accept: "application/rss+xml, application/xml, text/xml, */*" },
+  headers: {
+    "User-Agent": UA,
+    Accept: "application/rss+xml, application/xml, text/xml, */*",
+  },
   timeout: 15000,
 });
 
@@ -17,7 +29,7 @@ async function fetchRss(source: Source): Promise<NewsItem[]> {
     next: { revalidate: false, tags: ["news", `news:${source.id}`] },
   });
   if (!res.ok) throw new Error(`RSS ${source.feedUrl} -> HTTP ${res.status}`);
-  const xml = await res.text();
+  const xml = await decodeXml(res);
   const feed = await parser.parseString(xml);
   const items: NewsItem[] = [];
   for (const it of feed.items ?? []) {
@@ -25,13 +37,33 @@ async function fetchRss(source: Source): Promise<NewsItem[]> {
     const date = it.isoDate || it.pubDate || new Date().toISOString();
     items.push({
       id: `${source.id}:${it.link}`,
-      companyId: source.id,
+      sourceId: source.id,
       title: it.title.trim(),
       url: it.link,
       publishedAt: new Date(date).toISOString(),
     });
   }
   return items;
+}
+
+async function decodeXml(res: Response): Promise<string> {
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // Peek the first ~200 bytes as ASCII to find encoding declaration.
+  const head = new TextDecoder("ascii").decode(bytes.subarray(0, 200));
+  const m = head.match(/encoding=["']([\w-]+)["']/i);
+  const encoding = (m?.[1] ?? "utf-8").toLowerCase();
+  try {
+    const aliased =
+      encoding === "shift_jis" || encoding === "shift-jis" || encoding === "x-sjis"
+        ? "shift-jis"
+        : encoding === "euc-jp" || encoding === "x-euc-jp"
+          ? "euc-jp"
+          : encoding;
+    return new TextDecoder(aliased).decode(bytes);
+  } catch {
+    return new TextDecoder("utf-8").decode(bytes);
+  }
 }
 
 function parseJpDate(s: string): string | null {
@@ -64,8 +96,6 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
   const items: NewsItem[] = [];
   const seen = new Set<string>();
 
-  // Generic strategy: find blocks that contain a JP date and an <a> link
-  // pointing to a news article. Works for both ntt-west and ntt.com.
   const candidates = $("li, dt, dd, tr, div, article").toArray();
   for (const el of candidates) {
     const $el = $(el);
@@ -80,7 +110,6 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
     if (/^(mailto:|javascript:|#)/i.test(href)) continue;
 
     const absolute = absUrl(href, source.feedUrl);
-    // Filter: link must look like a news article (not a top-level nav link)
     if (!isNewsLink(absolute, source.id)) continue;
 
     const title = $a
@@ -94,7 +123,7 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
 
     items.push({
       id: `${source.id}:${absolute}`,
-      companyId: source.id,
+      sourceId: source.id,
       title,
       url: absolute,
       publishedAt: date,
@@ -104,19 +133,26 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
   return items;
 }
 
-function isNewsLink(url: string, companyId: CompanyId): boolean {
-  if (companyId === "ntt-west") {
-    return /ntt-west\.co\.jp\/news\/\d{4}\//.test(url) ||
-      /ntt-west\.co\.jp\/news\/.*\.html/.test(url);
+function isNewsLink(url: string, sourceId: SourceId): boolean {
+  if (sourceId === "ntt-west") {
+    return (
+      /ntt-west\.co\.jp\/news\/\d{4}\//.test(url) ||
+      /ntt-west\.co\.jp\/news\/.*\.html/.test(url)
+    );
   }
-  if (companyId === "docomo-business") {
-    return /ntt\.com\/about-us\/(press-releases|news-center)\/.*\.html/.test(url);
+  if (sourceId === "docomo-business") {
+    return /ntt\.com\/about-us\/(press-releases|news-center)\/.*\.html/.test(
+      url
+    );
+  }
+  if (sourceId === "nttdata") {
+    return /nttdata\.com\/.*\/news\/(release|topics)\//.test(url);
   }
   return true;
 }
 
-export async function fetchCompany(companyId: CompanyId): Promise<CompanyFeed> {
-  const source = getSource(companyId);
+export async function fetchSource(sourceId: SourceId): Promise<SourceFeed> {
+  const source = getSource(sourceId);
   const fetchedAt = new Date().toISOString();
   try {
     const items =
@@ -124,10 +160,10 @@ export async function fetchCompany(companyId: CompanyId): Promise<CompanyFeed> {
         ? await fetchRss(source)
         : await fetchScrape(source);
     items.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-    return { companyId, items: items.slice(0, 30), fetchedAt };
+    return { sourceId, items: items.slice(0, 30), fetchedAt };
   } catch (e) {
     return {
-      companyId,
+      sourceId,
       items: [],
       fetchedAt,
       error: e instanceof Error ? e.message : String(e),
@@ -135,6 +171,23 @@ export async function fetchCompany(companyId: CompanyId): Promise<CompanyFeed> {
   }
 }
 
-export async function fetchAll(): Promise<CompanyFeed[]> {
-  return Promise.all(SOURCES.map((s) => fetchCompany(s.id)));
+export async function fetchPrimary(): Promise<SourceFeed[]> {
+  return Promise.all(PRIMARY_SOURCES.map((s) => fetchSource(s.id)));
+}
+
+export async function fetchExtended(): Promise<{
+  media: SourceFeed[];
+  regulator: SourceFeed[];
+  competitor: SourceFeed[];
+}> {
+  const [media, regulator, competitor] = await Promise.all([
+    Promise.all(MEDIA_SOURCES.map((s) => fetchSource(s.id))),
+    Promise.all(REGULATOR_SOURCES.map((s) => fetchSource(s.id))),
+    Promise.all(COMPETITOR_SOURCES.map((s) => fetchSource(s.id))),
+  ]);
+  return { media, regulator, competitor };
+}
+
+export async function fetchAll(): Promise<SourceFeed[]> {
+  return Promise.all(ALL_SOURCES.map((s) => fetchSource(s.id)));
 }

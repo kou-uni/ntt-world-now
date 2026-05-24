@@ -1,16 +1,19 @@
-import type { CompanyId } from "./sources";
+import type { SourceId } from "./sources";
 
 export type NewsItem = {
   id: string;
-  companyId: CompanyId;
+  sourceId: SourceId;
   title: string;
   url: string;
   publishedAt: string;
 };
 
-export type CompanyFeed = {
-  companyId: CompanyId;
+export type SourceFeed = {
+  sourceId: SourceId;
   items: NewsItem[];
   fetchedAt: string;
   error?: string;
 };
+
+// Backwards-compat
+export type CompanyFeed = SourceFeed & { companyId: SourceId };
