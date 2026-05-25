@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, LayoutGroup } from "motion/react";
 import { SOURCES } from "@/lib/sources";
 import { EASE_PREMIUM, SPRING_GENTLE } from "@/lib/motion";
@@ -47,7 +47,17 @@ export function Dashboard({ feeds }: Props) {
   const [tiers, setTiers] = useState<Set<Tier>>(new Set(ALL_TIERS));
   const [query, setQuery] = useState("");
   const [crossRegion, setCrossRegion] = useState(false);
-  const [freeOnly, setFreeOnly] = useState(false);
+  // 既定: ペイウォール記事を除外。クリックしても登録要求で読めないため
+  const [freeOnly, setFreeOnly] = useState(true);
+
+  // localStorage で freeOnly の選択を記憶
+  useEffect(() => {
+    const saved = window.localStorage.getItem("nww:freeOnly");
+    if (saved !== null) setFreeOnly(saved === "1");
+  }, []);
+  useEffect(() => {
+    window.localStorage.setItem("nww:freeOnly", freeOnly ? "1" : "0");
+  }, [freeOnly]);
 
   const sourceById = useMemo(
     () => new Map(SOURCES.map((s) => [s.id, s] as const)),
