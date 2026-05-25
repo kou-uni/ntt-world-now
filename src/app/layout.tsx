@@ -45,41 +45,47 @@ export default function RootLayout({
           <TopProgressBar />
           <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-2xl pt-safe">
             <HeaderShimmer />
-            <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8 sm:py-5">
-              <Link href="/" className="group flex items-baseline gap-2.5">
-                <span className="text-[19px] font-semibold tracking-tight transition-colors sm:text-[21px]">
-                  NTT World Now
+            <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:gap-6 sm:px-8 sm:py-4">
+              <Link
+                href="/"
+                className="group flex shrink-0 items-baseline gap-1.5 whitespace-nowrap"
+              >
+                <span className="text-[16px] font-bold tracking-tight sm:text-[18px]">
+                  NTT
+                </span>
+                <span className="hidden font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-[var(--muted)] sm:inline">
+                  / World Now
                 </span>
               </Link>
-              <nav className="flex items-center gap-1 font-mono text-[13px] uppercase tracking-[0.12em] sm:text-[14px]">
+              <nav className="flex flex-1 items-center justify-end gap-0 font-mono text-[11.5px] uppercase tracking-[0.08em] sm:text-[12.5px]">
                 <Link
                   href="/"
-                  className="rounded-md px-3 py-2 font-medium hover:bg-[var(--subtle)]"
+                  className="rounded-md px-2 py-2 font-bold hover:bg-[var(--subtle)] sm:px-3"
                 >
                   news
                 </Link>
                 <Link
                   href="/portfolio"
-                  className="rounded-md px-3 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                  className="rounded-md px-2 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)] sm:px-3"
                 >
                   portfolio
                 </Link>
                 <Link
                   href="/ir"
-                  className="rounded-md px-3 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                  className="rounded-md px-2 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)] sm:px-3"
                 >
                   ir
                 </Link>
                 <Link
                   href="/sources"
-                  className="rounded-md px-3 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                  className="rounded-md px-2 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)] sm:px-3"
                 >
-                  sources
+                  src
                 </Link>
                 <Link
                   href="/settings"
                   aria-label="Settings"
-                  className="rounded-md px-2.5 py-2 text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                  className="rounded-md px-2 py-2 text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)] sm:px-2.5"
                 >
                   <svg
                     viewBox="0 0 24 24"

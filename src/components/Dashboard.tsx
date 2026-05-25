@@ -21,20 +21,10 @@ const ALL_TIERS: Tier[] = TIERS.map((t) => t.id);
 
 type BandFilter = "signal" | "radar" | "all";
 
-const BAND_TABS: { id: BandFilter; label: string; icon: string; desc: string }[] = [
-  {
-    id: "signal",
-    label: "Signal",
-    icon: "🟢",
-    desc: "高品質・直接NTT関連 (score≥60)",
-  },
-  {
-    id: "radar",
-    label: "Radar",
-    icon: "🟡",
-    desc: "中程度・関連可能性あり (30≤score<60)",
-  },
-  { id: "all", label: "全部", icon: "⚪", desc: "Signal + Radar 両方" },
+const BAND_TABS: { id: BandFilter; label: string; desc: string }[] = [
+  { id: "signal", label: "重要", desc: "NTT直接関連の高品質記事" },
+  { id: "radar", label: "周辺", desc: "中程度・関連可能性あり" },
+  { id: "all", label: "全部", desc: "重要 + 周辺の両方" },
 ];
 
 type Props = {
@@ -47,10 +37,10 @@ export function Dashboard({ feeds }: Props) {
   const [tiers, setTiers] = useState<Set<Tier>>(new Set(ALL_TIERS));
   const [query, setQuery] = useState("");
   const [crossRegion, setCrossRegion] = useState(false);
-  // 既定: ペイウォール記事を除外。クリックしても登録要求で読めないため
   const [freeOnly, setFreeOnly] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // localStorage で freeOnly の選択を記憶
+  // localStorage 永続化
   useEffect(() => {
     const saved = window.localStorage.getItem("nww:freeOnly");
     if (saved !== null) setFreeOnly(saved === "1");
@@ -75,13 +65,12 @@ export function Dashboard({ feeds }: Props) {
       .filter((it) => {
         const src = sourceById.get(it.sourceId);
         if (!src) return false;
-        // 品質バンド
         if (band === "signal" && it.band !== "signal") return false;
         if (band === "radar" && it.band !== "radar") return false;
-        // all は signal + radar 両方OK (discardは元から除去済み)
         if (!tiers.has(src.tier)) return false;
         if (!crossRegion && src.region !== region) return false;
-        if (freeOnly && (src.paywall === "hard" || src.paywall === "soft")) return false;
+        if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
+          return false;
         if (q) {
           const hay = `${it.title} ${src.name} ${src.shortName} ${(it.matchedBrands ?? []).join(" ")}`.toLowerCase();
           if (!hay.includes(q)) return false;
@@ -89,9 +78,8 @@ export function Dashboard({ feeds }: Props) {
         return true;
       })
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  }, [allItems, sourceById, band, tiers, region, crossRegion, query]);
+  }, [allItems, sourceById, band, tiers, region, crossRegion, freeOnly, query]);
 
-  // band ごとの件数（バッジ用）
   const bandCounts = useMemo(() => {
     const counts: Record<QualityBand, number> = { signal: 0, radar: 0, discard: 0 };
     for (const it of allItems) {
@@ -99,10 +87,12 @@ export function Dashboard({ feeds }: Props) {
       if (!src) continue;
       if (!tiers.has(src.tier)) continue;
       if (!crossRegion && src.region !== region) continue;
+      if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
+        continue;
       if (it.band) counts[it.band] += 1;
     }
     return counts;
-  }, [allItems, sourceById, tiers, region, crossRegion]);
+  }, [allItems, sourceById, tiers, region, crossRegion, freeOnly]);
 
   const regionCounts = useMemo(() => {
     const counts: Partial<Record<Region, number>> = {};
@@ -113,6 +103,8 @@ export function Dashboard({ feeds }: Props) {
       if (band === "signal" && it.band !== "signal") continue;
       if (band === "radar" && it.band !== "radar") continue;
       if (!tiers.has(src.tier)) continue;
+      if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
+        continue;
       if (q) {
         const hay = `${it.title} ${src.name} ${(it.matchedBrands ?? []).join(" ")}`.toLowerCase();
         if (!hay.includes(q)) continue;
@@ -120,7 +112,7 @@ export function Dashboard({ feeds }: Props) {
       counts[src.region] = (counts[src.region] ?? 0) + 1;
     }
     return counts;
-  }, [allItems, sourceById, band, tiers, query]);
+  }, [allItems, sourceById, band, tiers, query, freeOnly]);
 
   const toggleTier = (t: Tier) => {
     setTiers((prev) => {
@@ -133,32 +125,26 @@ export function Dashboard({ feeds }: Props) {
   };
   const resetTiers = () => setTiers(new Set(ALL_TIERS));
 
-  // 表示キー（filtered内容が変わったらAnimatePresenceでフェードイン更新）
-  const viewKey = `${band}|${crossRegion ? "all" : region}|${[...tiers].sort().join(",")}|${query}`;
+  const viewKey = `${band}|${crossRegion ? "all" : region}|${[...tiers].sort().join(",")}|${query}|${freeOnly}`;
 
   const visibleItems = filtered.slice(0, 200);
 
+  // 詳細フィルタが既定状態と違う場合に「ドット」を表示
+  const filterDirty =
+    !freeOnly ||
+    crossRegion ||
+    tiers.size !== ALL_TIERS.length ||
+    region !== "global";
+
   return (
     <>
-      <SearchBar
-        value={query}
-        onChange={setQuery}
-        crossRegion={crossRegion}
-        onToggleCrossRegion={setCrossRegion}
-        freeOnly={freeOnly}
-        onToggleFreeOnly={setFreeOnly}
-      />
+      {/* 検索 (常時) */}
+      <SearchBar value={query} onChange={setQuery} />
 
-      {/* 品質バンドタブ */}
-      <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="mono-label">品質</span>
-          <span className="font-mono text-[10.5px] text-[var(--muted-2)]">
-            {BAND_TABS.find((b) => b.id === band)?.desc}
-          </span>
-        </div>
+      {/* 品質バンドタブ (常時) */}
+      <div className="mb-3">
         <LayoutGroup id="band-tabs">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             {BAND_TABS.map((b) => {
               const isActive = b.id === band;
               const count =
@@ -172,7 +158,7 @@ export function Dashboard({ feeds }: Props) {
                   onClick={() => setBand(b.id)}
                   whileTap={{ scale: 0.97 }}
                   className={
-                    "relative flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-4 py-2.5 text-[14px] font-medium transition-colors duration-300 " +
+                    "relative flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2.5 text-[14px] font-medium transition-colors duration-300 " +
                     (isActive
                       ? "border-transparent text-[var(--background)]"
                       : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--border-strong)]")
@@ -189,7 +175,6 @@ export function Dashboard({ feeds }: Props) {
                       }}
                     />
                   )}
-                  <span className="relative z-10">{b.icon}</span>
                   <span className="relative z-10">{b.label}</span>
                   <span
                     className={
@@ -206,44 +191,85 @@ export function Dashboard({ feeds }: Props) {
         </LayoutGroup>
       </div>
 
-      <RegionTabs
-        active={region}
-        counts={regionCounts}
-        onChange={setRegion}
-        disabled={crossRegion}
-      />
-
-      <TierFilter selected={tiers} onToggle={toggleTier} onReset={resetTiers} />
-
-      <div className="mb-4 flex items-center justify-between border-t border-[var(--border)] pt-4 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--muted)]">
-        <span className="tabular-nums">
+      {/* 詳細フィルタトグル */}
+      <div className="mb-3 flex items-center justify-between text-[12.5px]">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] text-[var(--muted)] hover:text-[var(--foreground)]"
+        >
+          <motion.svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            animate={{ rotate: filtersOpen ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: EASE_PREMIUM }}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </motion.svg>
+          詳細フィルタ
+          {filterDirty && (
+            <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--foreground)]" />
+          )}
+        </button>
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] tabular-nums text-[var(--muted)]">
           <motion.span
             key={filtered.length}
-            initial={{ opacity: 0, y: -3, filter: "blur(3px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.4, ease: EASE_PREMIUM }}
+            initial={{ opacity: 0, y: -3 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: EASE_PREMIUM }}
             className="inline-block font-bold text-[var(--foreground)]"
           >
             {filtered.length}
           </motion.span>{" "}
-          件
-          {crossRegion ? " · 全エリア" : ""}
+          / {bandCounts.signal + bandCounts.radar} 件
         </span>
-        <AnimatePresence>
-          {query && (
-            <motion.span
-              initial={{ opacity: 0, x: 6, filter: "blur(4px)" }}
-              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, x: 6, filter: "blur(4px)" }}
-              transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-              className="truncate font-normal normal-case tracking-tight"
-            >
-              <span className="text-[var(--muted-2)]">検索:</span>{" "}
-              <span className="text-[var(--foreground)]">{query}</span>
-            </motion.span>
-          )}
-        </AnimatePresence>
       </div>
+
+      <AnimatePresence initial={false}>
+        {filtersOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+            className="overflow-hidden"
+          >
+            <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--subtle)] p-4">
+              {/* トグル群 */}
+              <div className="mb-4 flex flex-wrap gap-x-4 gap-y-2">
+                <ToggleChip
+                  active={freeOnly}
+                  onChange={setFreeOnly}
+                  label="🔓 無料記事のみ"
+                />
+                <ToggleChip
+                  active={crossRegion}
+                  onChange={setCrossRegion}
+                  label="全エリア横断"
+                />
+              </div>
+
+              <RegionTabs
+                active={region}
+                counts={regionCounts}
+                onChange={setRegion}
+                disabled={crossRegion}
+              />
+              <TierFilter
+                selected={tiers}
+                onToggle={toggleTier}
+                onReset={resetTiers}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {filtered.length === 0 ? (
@@ -272,5 +298,48 @@ export function Dashboard({ feeds }: Props) {
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+function ToggleChip({
+  active,
+  onChange,
+  label,
+}: {
+  active: boolean;
+  onChange: (b: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-[var(--muted)] hover:text-[var(--foreground)]">
+      <motion.span
+        animate={{
+          backgroundColor: active ? "rgb(0,0,0)" : "rgba(0,0,0,0)",
+        }}
+        transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+        className={
+          "inline-flex h-[18px] w-9 items-center rounded-full border " +
+          (active
+            ? "border-[var(--foreground)]"
+            : "border-[var(--border-strong)]")
+        }
+      >
+        <motion.span
+          animate={{
+            x: active ? 18 : 3,
+            backgroundColor: active ? "var(--background)" : "var(--muted)",
+          }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="h-3 w-3 rounded-full"
+        />
+      </motion.span>
+      <input
+        type="checkbox"
+        checked={active}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      {label}
+    </label>
   );
 }
