@@ -9,9 +9,18 @@ type Props = {
   onChange: (v: string) => void;
   crossRegion: boolean;
   onToggleCrossRegion: (b: boolean) => void;
+  freeOnly: boolean;
+  onToggleFreeOnly: (b: boolean) => void;
 };
 
-export function SearchBar({ value, onChange, crossRegion, onToggleCrossRegion }: Props) {
+export function SearchBar({
+  value,
+  onChange,
+  crossRegion,
+  onToggleCrossRegion,
+  freeOnly,
+  onToggleFreeOnly,
+}: Props) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -77,10 +86,11 @@ export function SearchBar({ value, onChange, crossRegion, onToggleCrossRegion }:
         </AnimatePresence>
       </motion.div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
       <motion.label
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.2 }}
-        className="mt-3 inline-flex cursor-pointer items-center gap-2.5 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+        className="inline-flex cursor-pointer items-center gap-2.5 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
       >
         <motion.span
           animate={{
@@ -111,6 +121,41 @@ export function SearchBar({ value, onChange, crossRegion, onToggleCrossRegion }:
         />
         全エリア横断
       </motion.label>
+      <motion.label
+        whileTap={{ scale: 0.97 }}
+        transition={{ duration: 0.2 }}
+        className="inline-flex cursor-pointer items-center gap-2.5 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+      >
+        <motion.span
+          animate={{
+            backgroundColor: freeOnly ? "rgb(0,0,0)" : "rgba(0,0,0,0)",
+          }}
+          transition={{ duration: 0.35, ease: EASE_PREMIUM }}
+          className={
+            "inline-flex h-[18px] w-9 items-center rounded-full border transition-colors duration-300 " +
+            (freeOnly
+              ? "border-[var(--foreground)]"
+              : "border-[var(--border-strong)]")
+          }
+        >
+          <motion.span
+            animate={{
+              x: freeOnly ? 18 : 3,
+              backgroundColor: freeOnly ? "var(--background)" : "var(--muted)",
+            }}
+            transition={SPRING_SNAPPY}
+            className="h-3 w-3 rounded-full"
+          />
+        </motion.span>
+        <input
+          type="checkbox"
+          checked={freeOnly}
+          onChange={(e) => onToggleFreeOnly(e.target.checked)}
+          className="sr-only"
+        />
+        🔓 無料記事のみ
+      </motion.label>
+      </div>
     </div>
   );
 }

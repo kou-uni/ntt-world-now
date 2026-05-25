@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 import * as cheerio from "cheerio";
 import { SOURCES, getSource, ALL_BRAND_KEYWORDS } from "./sources";
 import type { Source, SourceFeed, NewsItem } from "./types";
+import { scoreArticle } from "./scoring";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -134,12 +135,19 @@ export async function fetchSource(sourceId: string): Promise<SourceFeed> {
   const source = getSource(sourceId);
   const fetchedAt = new Date().toISOString();
   try {
-    const items =
+    const rawItems =
       source.feedType === "rss"
         ? await fetchRss(source)
         : await fetchScrape(source);
-    items.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-    return { sourceId, items: items.slice(0, 30), fetchedAt };
+    // 品質スコアリング
+    const scored: NewsItem[] = rawItems.map((it) => {
+      const q = scoreArticle(it, source);
+      return { ...it, score: q.score, band: q.band };
+    });
+    // discard 帯は捨てる
+    const filtered = scored.filter((it) => it.band !== "discard");
+    filtered.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    return { sourceId, items: filtered.slice(0, 30), fetchedAt };
   } catch (e) {
     return {
       sourceId,

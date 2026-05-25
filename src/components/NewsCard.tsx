@@ -61,6 +61,40 @@ export function NewsCard({ item, index }: Props) {
         >
           {formatJpDate(item.publishedAt)}
         </time>
+        {item.band === "radar" && (
+          <span
+            title={`radar · score ${item.score}`}
+            className="ml-1 rounded-sm border border-amber-400 bg-amber-50 px-1 text-[10px] font-bold text-amber-700 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300"
+          >
+            RADAR
+          </span>
+        )}
+        {item.band === "signal" && typeof item.score === "number" && item.score >= 80 && (
+          <span
+            title={`high signal · score ${item.score}`}
+            className="ml-1 rounded-sm border border-emerald-500 bg-emerald-50 px-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+          >
+            HOT
+          </span>
+        )}
+        {source.paywall === "hard" && (
+          <span
+            title="完全有料（記事を読むには契約が必要）"
+            className="ml-1 text-[11px]"
+            aria-label="paywall"
+          >
+            🔒
+          </span>
+        )}
+        {source.paywall === "soft" && (
+          <span
+            title="緩いペイウォール（月数本まで無料）"
+            className="ml-1 text-[11px] opacity-70"
+            aria-label="soft paywall"
+          >
+            🔒
+          </span>
+        )}
         {isNew && (
           <motion.span
             initial={{ scale: 0.6, opacity: 0 }}

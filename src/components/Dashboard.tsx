@@ -1,10 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, LayoutGroup } from "motion/react";
 import { SOURCES } from "@/lib/sources";
-import { EASE_PREMIUM } from "@/lib/motion";
-import { type Region, type Tier, type SourceFeed, type NewsItem, TIERS } from "@/lib/types";
+import { EASE_PREMIUM, SPRING_GENTLE } from "@/lib/motion";
+import {
+  type Region,
+  type Tier,
+  type SourceFeed,
+  type NewsItem,
+  type QualityBand,
+  TIERS,
+} from "@/lib/types";
 import { SearchBar } from "./SearchBar";
 import { RegionTabs } from "./RegionTabs";
 import { TierFilter } from "./TierFilter";
@@ -12,15 +19,35 @@ import { NewsCard } from "./NewsCard";
 
 const ALL_TIERS: Tier[] = TIERS.map((t) => t.id);
 
+type BandFilter = "signal" | "radar" | "all";
+
+const BAND_TABS: { id: BandFilter; label: string; icon: string; desc: string }[] = [
+  {
+    id: "signal",
+    label: "Signal",
+    icon: "🟢",
+    desc: "高品質・直接NTT関連 (score≥60)",
+  },
+  {
+    id: "radar",
+    label: "Radar",
+    icon: "🟡",
+    desc: "中程度・関連可能性あり (30≤score<60)",
+  },
+  { id: "all", label: "全部", icon: "⚪", desc: "Signal + Radar 両方" },
+];
+
 type Props = {
   feeds: SourceFeed[];
 };
 
 export function Dashboard({ feeds }: Props) {
+  const [band, setBand] = useState<BandFilter>("signal");
   const [region, setRegion] = useState<Region>("global");
   const [tiers, setTiers] = useState<Set<Tier>>(new Set(ALL_TIERS));
   const [query, setQuery] = useState("");
   const [crossRegion, setCrossRegion] = useState(false);
+  const [freeOnly, setFreeOnly] = useState(false);
 
   const sourceById = useMemo(
     () => new Map(SOURCES.map((s) => [s.id, s] as const)),
@@ -38,8 +65,13 @@ export function Dashboard({ feeds }: Props) {
       .filter((it) => {
         const src = sourceById.get(it.sourceId);
         if (!src) return false;
+        // 品質バンド
+        if (band === "signal" && it.band !== "signal") return false;
+        if (band === "radar" && it.band !== "radar") return false;
+        // all は signal + radar 両方OK (discardは元から除去済み)
         if (!tiers.has(src.tier)) return false;
         if (!crossRegion && src.region !== region) return false;
+        if (freeOnly && (src.paywall === "hard" || src.paywall === "soft")) return false;
         if (q) {
           const hay = `${it.title} ${src.name} ${src.shortName} ${(it.matchedBrands ?? []).join(" ")}`.toLowerCase();
           if (!hay.includes(q)) return false;
@@ -47,7 +79,20 @@ export function Dashboard({ feeds }: Props) {
         return true;
       })
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  }, [allItems, sourceById, tiers, region, crossRegion, query]);
+  }, [allItems, sourceById, band, tiers, region, crossRegion, query]);
+
+  // band ごとの件数（バッジ用）
+  const bandCounts = useMemo(() => {
+    const counts: Record<QualityBand, number> = { signal: 0, radar: 0, discard: 0 };
+    for (const it of allItems) {
+      const src = sourceById.get(it.sourceId);
+      if (!src) continue;
+      if (!tiers.has(src.tier)) continue;
+      if (!crossRegion && src.region !== region) continue;
+      if (it.band) counts[it.band] += 1;
+    }
+    return counts;
+  }, [allItems, sourceById, tiers, region, crossRegion]);
 
   const regionCounts = useMemo(() => {
     const counts: Partial<Record<Region, number>> = {};
@@ -55,6 +100,8 @@ export function Dashboard({ feeds }: Props) {
     for (const it of allItems) {
       const src = sourceById.get(it.sourceId);
       if (!src) continue;
+      if (band === "signal" && it.band !== "signal") continue;
+      if (band === "radar" && it.band !== "radar") continue;
       if (!tiers.has(src.tier)) continue;
       if (q) {
         const hay = `${it.title} ${src.name} ${(it.matchedBrands ?? []).join(" ")}`.toLowerCase();
@@ -63,7 +110,7 @@ export function Dashboard({ feeds }: Props) {
       counts[src.region] = (counts[src.region] ?? 0) + 1;
     }
     return counts;
-  }, [allItems, sourceById, tiers, query]);
+  }, [allItems, sourceById, band, tiers, query]);
 
   const toggleTier = (t: Tier) => {
     setTiers((prev) => {
@@ -77,7 +124,7 @@ export function Dashboard({ feeds }: Props) {
   const resetTiers = () => setTiers(new Set(ALL_TIERS));
 
   // 表示キー（filtered内容が変わったらAnimatePresenceでフェードイン更新）
-  const viewKey = `${crossRegion ? "all" : region}|${[...tiers].sort().join(",")}|${query}`;
+  const viewKey = `${band}|${crossRegion ? "all" : region}|${[...tiers].sort().join(",")}|${query}`;
 
   const visibleItems = filtered.slice(0, 200);
 
@@ -88,7 +135,66 @@ export function Dashboard({ feeds }: Props) {
         onChange={setQuery}
         crossRegion={crossRegion}
         onToggleCrossRegion={setCrossRegion}
+        freeOnly={freeOnly}
+        onToggleFreeOnly={setFreeOnly}
       />
+
+      {/* 品質バンドタブ */}
+      <div className="mb-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="mono-label">品質</span>
+          <span className="font-mono text-[10.5px] text-[var(--muted-2)]">
+            {BAND_TABS.find((b) => b.id === band)?.desc}
+          </span>
+        </div>
+        <LayoutGroup id="band-tabs">
+          <div className="flex gap-1.5">
+            {BAND_TABS.map((b) => {
+              const isActive = b.id === band;
+              const count =
+                b.id === "all"
+                  ? bandCounts.signal + bandCounts.radar
+                  : bandCounts[b.id];
+              return (
+                <motion.button
+                  key={b.id}
+                  type="button"
+                  onClick={() => setBand(b.id)}
+                  whileTap={{ scale: 0.97 }}
+                  className={
+                    "relative flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-4 py-2.5 text-[14px] font-medium transition-colors duration-300 " +
+                    (isActive
+                      ? "border-transparent text-[var(--background)]"
+                      : "border-[var(--border)] text-[var(--foreground)] hover:border-[var(--border-strong)]")
+                  }
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="band-active-bg"
+                      transition={SPRING_GENTLE}
+                      className="absolute inset-0 -z-0 rounded-lg bg-[var(--foreground)]"
+                      style={{
+                        boxShadow:
+                          "0 4px 14px -4px color-mix(in srgb, var(--foreground) 35%, transparent)",
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10">{b.icon}</span>
+                  <span className="relative z-10">{b.label}</span>
+                  <span
+                    className={
+                      "relative z-10 tabular-nums font-mono text-[11px] " +
+                      (isActive ? "opacity-70" : "text-[var(--muted-2)]")
+                    }
+                  >
+                    {count}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </LayoutGroup>
+      </div>
 
       <RegionTabs
         active={region}

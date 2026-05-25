@@ -99,6 +99,7 @@ export const SOURCES: Source[] = [
     tier: "T1",
     region: "global",
     isAggregator: true,
+    paywall: "free",
   },
   {
     id: "bloomberg",
@@ -113,6 +114,7 @@ export const SOURCES: Source[] = [
     tier: "T1",
     region: "global",
     isAggregator: true,
+    paywall: "hard",
   },
   {
     id: "ft",
@@ -128,6 +130,7 @@ export const SOURCES: Source[] = [
     tier: "T2",
     region: "global",
     isAggregator: true,
+    paywall: "hard",
   },
   {
     id: "bbc-business",
@@ -171,7 +174,19 @@ export const SOURCES: Source[] = [
     region: "global",
     isAggregator: true,
   },
-  // (削除: Mobile World Live - site検索が目次ページばかりhit。Phase 3で直接RSSで復活予定)
+  // 業界専門紙: Mobile World Live (直接RSS、NTT関連だけ品質スコアで自動絞り込み)
+  {
+    id: "mobile-world-live",
+    name: "Mobile World Live",
+    shortName: "MWL",
+    homepage: "https://www.mobileworldlive.com/",
+    feedUrl: "https://www.mobileworldlive.com/feed/",
+    feedType: "rss",
+    tier: "T3",
+    region: "global",
+    isAggregator: false,
+    paywall: "free",
+  },
   {
     id: "capacity-media",
     name: "Capacity Media",
@@ -574,10 +589,24 @@ export const SOURCES: Source[] = [
   },
 ];
 
+/**
+ * ソースのpaywall度を返す（明示されてなければ ID から推定）
+ * - hard: 強いペイウォール（Bloomberg, FT, WSJ, NYT, Barron's, The Information等）
+ * - soft: 月数本無料系（Nikkei Asia 等）
+ * - free: 無料 or 集約サービス（Google News横断、業界専門紙等）
+ */
+function inferPaywall(id: string, explicit?: PaywallLevel): PaywallLevel {
+  if (explicit) return explicit;
+  if (/bloomberg|ft$|wsj|nytimes|washingtonpost|barrons|the-information/.test(id))
+    return "hard";
+  if (/nikkei|le-monde/.test(id)) return "soft";
+  return "free";
+}
+
 export function getSource(id: string): Source {
   const s = SOURCES.find((x) => x.id === id);
   if (!s) throw new Error(`Unknown source: ${id}`);
-  return s;
+  return { ...s, paywall: inferPaywall(s.id, s.paywall) };
 }
 
 export function sourcesByRegion(region: string): Source[] {

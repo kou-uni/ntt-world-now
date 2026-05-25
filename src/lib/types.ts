@@ -43,6 +43,8 @@ export const REGIONS: RegionMeta[] = [
 
 export type SourceId = string;
 
+export type PaywallLevel = "free" | "soft" | "hard";
+
 export type Source = {
   id: SourceId;
   name: string;
@@ -56,7 +58,11 @@ export type Source = {
   isAggregator?: boolean;
   /** 取得した記事をNTTキーワードでフィルタするか（直接RSSは true、Google Newsは false：クエリ済み） */
   filterByKeywords?: boolean;
+  /** ペイウォール度: free=無料 / soft=月N本無料 / hard=完全有料 */
+  paywall?: PaywallLevel;
 };
+
+export type QualityBand = "signal" | "radar" | "discard";
 
 export type NewsItem = {
   id: string;
@@ -66,6 +72,10 @@ export type NewsItem = {
   publishedAt: string;
   /** 記事内で検出されたNTT関連ブランド（旧買収企業名等） */
   matchedBrands?: string[];
+  /** 品質スコア 0-100 */
+  score?: number;
+  /** Signal (高品質) / Radar (中程度) / Discard */
+  band?: QualityBand;
 };
 
 export type SourceFeed = {
