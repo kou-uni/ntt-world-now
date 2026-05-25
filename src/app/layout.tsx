@@ -59,6 +59,12 @@ export default function RootLayout({
                   news
                 </Link>
                 <Link
+                  href="/portfolio"
+                  className="rounded-md px-3 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
+                >
+                  portfolio
+                </Link>
+                <Link
                   href="/ir"
                   className="rounded-md px-3 py-2 font-medium text-[var(--muted)] hover:bg-[var(--subtle)] hover:text-[var(--foreground)]"
                 >

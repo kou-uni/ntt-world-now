@@ -10,6 +10,7 @@ import {
   type Tier,
   type Region,
 } from "@/lib/types";
+import { PORTFOLIO, UNICORNS } from "@/lib/portfolio";
 
 export const metadata = {
   title: "Sources & Methodology · NTT World Now",
@@ -230,9 +231,53 @@ export default function SourcesPage() {
         </div>
       </section>
 
+      {/* NEW: Portfolio data */}
+      <section className="mb-14">
+        <SectionLabel>05 · portfolio</SectionLabel>
+        <H2>NTT DOCOMO Ventures 投資先データ</H2>
+        <Lead>
+          165社のポートフォリオを構造化し、
+          <Link href="/portfolio" className="underline hover:text-[var(--foreground)]">
+            /portfolio
+          </Link>
+          で閲覧可能。各社のステータス・カテゴリ・地域でフィルタでき、
+          NTTグループの戦略動向を投資視点で読み解けます。
+        </Lead>
+
+        <div className="grid gap-2 sm:grid-cols-4">
+          <div className="rounded-lg border border-[var(--border)] p-4">
+            <div className="font-mono text-[28px] font-bold tabular-nums">
+              {PORTFOLIO.length}
+            </div>
+            <div className="mono-label mt-1">total</div>
+          </div>
+          <div className="rounded-lg border border-[var(--border)] p-4">
+            <div className="font-mono text-[28px] font-bold tabular-nums">
+              {UNICORNS.length}
+            </div>
+            <div className="mono-label mt-1">🦄 unicorn</div>
+          </div>
+          <div className="rounded-lg border border-[var(--border)] p-4">
+            <div className="font-mono text-[28px] font-bold tabular-nums">
+              {PORTFOLIO.filter((c) => c.status === "ipo").length}
+            </div>
+            <div className="mono-label mt-1">🏢 ipo</div>
+          </div>
+          <div className="rounded-lg border border-[var(--border)] p-4">
+            <div className="font-mono text-[28px] font-bold tabular-nums">
+              {PORTFOLIO.filter((c) => c.status === "acquired").length}
+            </div>
+            <div className="mono-label mt-1">🤝 acquired</div>
+          </div>
+        </div>
+        <p className="mt-3 text-[12px] text-[var(--muted-2)]">
+          データ源: NTT DOCOMO Ventures 公式portfolioページ ({new Date().getFullYear()}年取得)
+        </p>
+      </section>
+
       {/* Keywords */}
       <section className="mb-14">
-        <SectionLabel>05 · keywords</SectionLabel>
+        <SectionLabel>06 · keywords</SectionLabel>
         <H2>検索キーワードの設計</H2>
         <Lead>
           NTTグループは約900社あり、社名に「NTT」を含まない旧買収ブランドが多数あります。
@@ -281,7 +326,7 @@ export default function SourcesPage() {
 
       {/* Reliability criteria */}
       <section className="mb-14">
-        <SectionLabel>06 · reliability</SectionLabel>
+        <SectionLabel>07 · reliability</SectionLabel>
         <H2>信頼性の判定基準</H2>
         <Lead>
           Tier T1〜T6 の格付けは、以下の5項目で判定しています。
