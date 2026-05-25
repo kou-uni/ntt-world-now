@@ -1,4 +1,4 @@
-import type { Source } from "./types";
+import type { Source, PaywallLevel } from "./types";
 
 /**
  * NTTグループ関連の検索キーワード。
