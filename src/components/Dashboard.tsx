@@ -13,19 +13,29 @@ import {
   TIERS,
 } from "@/lib/types";
 import { SearchBar } from "./SearchBar";
-import { RegionTabs } from "./RegionTabs";
-import { TierFilter } from "./TierFilter";
 import { NewsCard } from "./NewsCard";
+import { FilterSheet } from "./FilterSheet";
 
 const ALL_TIERS: Tier[] = TIERS.map((t) => t.id);
 
 type BandFilter = "signal" | "radar" | "all";
 
-const BAND_TABS: { id: BandFilter; label: string; desc: string }[] = [
-  { id: "signal", label: "重要", desc: "NTT直接関連の高品質記事" },
-  { id: "radar", label: "周辺", desc: "中程度・関連可能性あり" },
-  { id: "all", label: "全部", desc: "重要 + 周辺の両方" },
+const BAND_TABS: { id: BandFilter; label: string }[] = [
+  { id: "signal", label: "重要" },
+  { id: "radar", label: "周辺" },
+  { id: "all", label: "全部" },
 ];
+
+const REGION_LABEL_SHORT: Record<Region, string> = {
+  global: "グローバル",
+  "north-america": "北米",
+  europe: "欧州",
+  "southeast-asia": "東南ア",
+  "middle-east": "中東",
+  africa: "アフリカ",
+  "latin-america": "中南米",
+  japan: "日本",
+};
 
 type Props = {
   feeds: SourceFeed[];
@@ -36,9 +46,8 @@ export function Dashboard({ feeds }: Props) {
   const [region, setRegion] = useState<Region>("global");
   const [tiers, setTiers] = useState<Set<Tier>>(new Set(ALL_TIERS));
   const [query, setQuery] = useState("");
-  const [crossRegion, setCrossRegion] = useState(false);
   const [freeOnly, setFreeOnly] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // localStorage 永続化
   useEffect(() => {
@@ -68,7 +77,7 @@ export function Dashboard({ feeds }: Props) {
         if (band === "signal" && it.band !== "signal") return false;
         if (band === "radar" && it.band !== "radar") return false;
         if (!tiers.has(src.tier)) return false;
-        if (!crossRegion && src.region !== region) return false;
+        if (src.region !== region) return false;
         if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
           return false;
         if (q) {
@@ -78,25 +87,26 @@ export function Dashboard({ feeds }: Props) {
         return true;
       })
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  }, [allItems, sourceById, band, tiers, region, crossRegion, freeOnly, query]);
+  }, [allItems, sourceById, band, tiers, region, freeOnly, query]);
 
+  // 各bandの件数（現在のregion/tier/freeOnly反映）
   const bandCounts = useMemo(() => {
     const counts: Record<QualityBand, number> = { signal: 0, radar: 0, discard: 0 };
     for (const it of allItems) {
       const src = sourceById.get(it.sourceId);
       if (!src) continue;
       if (!tiers.has(src.tier)) continue;
-      if (!crossRegion && src.region !== region) continue;
+      if (src.region !== region) continue;
       if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
         continue;
       if (it.band) counts[it.band] += 1;
     }
     return counts;
-  }, [allItems, sourceById, tiers, region, crossRegion, freeOnly]);
+  }, [allItems, sourceById, tiers, region, freeOnly]);
 
+  // sheet用: regionごとの件数
   const regionCounts = useMemo(() => {
     const counts: Partial<Record<Region, number>> = {};
-    const q = query.trim().toLowerCase();
     for (const it of allItems) {
       const src = sourceById.get(it.sourceId);
       if (!src) continue;
@@ -105,14 +115,10 @@ export function Dashboard({ feeds }: Props) {
       if (!tiers.has(src.tier)) continue;
       if (freeOnly && (src.paywall === "hard" || src.paywall === "soft"))
         continue;
-      if (q) {
-        const hay = `${it.title} ${src.name} ${(it.matchedBrands ?? []).join(" ")}`.toLowerCase();
-        if (!hay.includes(q)) continue;
-      }
       counts[src.region] = (counts[src.region] ?? 0) + 1;
     }
     return counts;
-  }, [allItems, sourceById, band, tiers, query, freeOnly]);
+  }, [allItems, sourceById, band, tiers, freeOnly]);
 
   const toggleTier = (t: Tier) => {
     setTiers((prev) => {
@@ -125,23 +131,20 @@ export function Dashboard({ feeds }: Props) {
   };
   const resetTiers = () => setTiers(new Set(ALL_TIERS));
 
-  const viewKey = `${band}|${crossRegion ? "all" : region}|${[...tiers].sort().join(",")}|${query}|${freeOnly}`;
+  const viewKey = `${band}|${region}|${[...tiers].sort().join(",")}|${query}|${freeOnly}`;
 
   const visibleItems = filtered.slice(0, 200);
 
-  // 詳細フィルタが既定状態と違う場合に「ドット」を表示
-  const filterDirty =
-    !freeOnly ||
-    crossRegion ||
-    tiers.size !== ALL_TIERS.length ||
-    region !== "global";
+  // 詳細フィルタが既定状態から変わっているか
+  const filtersDirty =
+    !freeOnly || tiers.size !== ALL_TIERS.length || region !== "global";
 
   return (
     <>
-      {/* 検索 (常時) */}
+      {/* 検索 */}
       <SearchBar value={query} onChange={setQuery} />
 
-      {/* 品質バンドタブ (常時) */}
+      {/* 品質バンドタブ */}
       <div className="mb-3">
         <LayoutGroup id="band-tabs">
           <div className="flex gap-1">
@@ -191,33 +194,38 @@ export function Dashboard({ feeds }: Props) {
         </LayoutGroup>
       </div>
 
-      {/* 詳細フィルタトグル */}
-      <div className="mb-3 flex items-center justify-between text-[12.5px]">
+      {/* フィルタ起動バー */}
+      <div className="mb-4 flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => setFiltersOpen((v) => !v)}
-          className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] text-[var(--muted)] hover:text-[var(--foreground)]"
+          onClick={() => setSheetOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[13px] transition hover:border-[var(--border-strong)]"
         >
-          <motion.svg
+          <svg
             viewBox="0 0 24 24"
-            width="14"
-            height="14"
+            width="15"
+            height="15"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            animate={{ rotate: filtersOpen ? 180 : 0 }}
-            transition={{ duration: 0.3, ease: EASE_PREMIUM }}
           >
-            <path d="m6 9 6 6 6-6" />
-          </motion.svg>
-          詳細フィルタ
-          {filterDirty && (
-            <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-[var(--foreground)]" />
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="7" y1="12" x2="17" y2="12" />
+            <line x1="10" y1="18" x2="14" y2="18" />
+          </svg>
+          <span className="font-medium">フィルタ</span>
+          <span className="text-[var(--muted)]">
+            · {REGION_LABEL_SHORT[region]}
+            {tiers.size < ALL_TIERS.length && ` · T${tiers.size}`}
+            {!freeOnly && " · 全媒体"}
+          </span>
+          {filtersDirty && (
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--foreground)]" />
           )}
         </button>
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] tabular-nums text-[var(--muted)]">
+        <span className="font-mono text-[11.5px] uppercase tracking-[0.12em] tabular-nums text-[var(--muted)]">
           <motion.span
             key={filtered.length}
             initial={{ opacity: 0, y: -3 }}
@@ -227,49 +235,9 @@ export function Dashboard({ feeds }: Props) {
           >
             {filtered.length}
           </motion.span>{" "}
-          / {bandCounts.signal + bandCounts.radar} 件
+          件
         </span>
       </div>
-
-      <AnimatePresence initial={false}>
-        {filtersOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-            className="overflow-hidden"
-          >
-            <div className="mb-4 rounded-xl border border-[var(--border)] bg-[var(--subtle)] p-4">
-              {/* トグル群 */}
-              <div className="mb-4 flex flex-wrap gap-x-4 gap-y-2">
-                <ToggleChip
-                  active={freeOnly}
-                  onChange={setFreeOnly}
-                  label="🔓 無料記事のみ"
-                />
-                <ToggleChip
-                  active={crossRegion}
-                  onChange={setCrossRegion}
-                  label="全エリア横断"
-                />
-              </div>
-
-              <RegionTabs
-                active={region}
-                counts={regionCounts}
-                onChange={setRegion}
-                disabled={crossRegion}
-              />
-              <TierFilter
-                selected={tiers}
-                onToggle={toggleTier}
-                onReset={resetTiers}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {filtered.length === 0 ? (
@@ -297,49 +265,20 @@ export function Dashboard({ feeds }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
-  );
-}
 
-function ToggleChip({
-  active,
-  onChange,
-  label,
-}: {
-  active: boolean;
-  onChange: (b: boolean) => void;
-  label: string;
-}) {
-  return (
-    <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-[var(--muted)] hover:text-[var(--foreground)]">
-      <motion.span
-        animate={{
-          backgroundColor: active ? "rgb(0,0,0)" : "rgba(0,0,0,0)",
-        }}
-        transition={{ duration: 0.35, ease: EASE_PREMIUM }}
-        className={
-          "inline-flex h-[18px] w-9 items-center rounded-full border " +
-          (active
-            ? "border-[var(--foreground)]"
-            : "border-[var(--border-strong)]")
-        }
-      >
-        <motion.span
-          animate={{
-            x: active ? 18 : 3,
-            backgroundColor: active ? "var(--background)" : "var(--muted)",
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="h-3 w-3 rounded-full"
-        />
-      </motion.span>
-      <input
-        type="checkbox"
-        checked={active}
-        onChange={(e) => onChange(e.target.checked)}
-        className="sr-only"
+      <FilterSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        region={region}
+        onRegionChange={setRegion}
+        regionCounts={regionCounts}
+        tiers={tiers}
+        onTierToggle={toggleTier}
+        onTierReset={resetTiers}
+        freeOnly={freeOnly}
+        onFreeOnlyChange={setFreeOnly}
+        totalCount={filtered.length}
       />
-      {label}
-    </label>
+    </>
   );
 }
