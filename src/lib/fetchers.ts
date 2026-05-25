@@ -20,6 +20,43 @@ function detectMatchedBrands(title: string): string[] {
   return ALL_BRAND_KEYWORDS.filter((b) => lower.includes(b.toLowerCase()));
 }
 
+/**
+ * Phase 2: タイトル後処理ノイズフィルタ
+ * 各メディアのRSSが目次ページ・株価ページ・他社プレス転載などを返してくるケースを除外。
+ */
+const NOISE_PATTERNS: RegExp[] = [
+  // 目次ページ系
+  /\bPage\s+\d+(\s+of\s+[\d,]+)?\s*[\|–-]/i,
+  /^Latest Stories News/i,
+  /Recent News articles \| page/i,
+  /Asia Pacific - Page \d+/i,
+  /中文 - Page \d+/i,
+  // FT の "Company Announcement"（他社プレス転載）
+  /[–-]\s*Company Announcement/i,
+  // Seeking Alpha 系
+  /Stock Price.*Quote.*News.*Analysis/i,
+  /SA Transcripts'?s Analysis/i,
+  /Earnings Call (Transcript|Prepared Remarks)/i,
+  /Q[1-4]\s*20\d{2}\s*Earnings Call/i,
+  /Mutual Fund:[A-Z]+/i,
+  /Competitor Stock Analysis/i,
+  /Japan Stock Market Outlook.*Analysis/i,
+  // 投資家向けデータ集約ページ
+  /Funding Rounds (and|&)\s*List of Investors/i,
+  /Price, Quote, News (and|&)\s*Analysis/i,
+  // 記者の著者プロフィールページ
+  /^[A-Z][a-z]+\s[A-Z][a-z]+\s*[-–]\s*Financial Times$/,
+  // 不明瞭なtopicページ (例: "Automobiles - Financial Times")
+  /^[A-Z][a-z]+\s*[-–]\s*Financial Times$/,
+  // 株価コードページ（例: "NTTD.SI - Reuters", "3850.T - Stock Price"）
+  /^[A-Z0-9]{2,5}(\.[A-Z]{1,3})?\s*-\s*(\|\s*)?(Stock Price|Latest News|Reuters|Bloomberg)/i,
+  /^\d{4}\.T\b/i,
+];
+
+function isNoise(title: string): boolean {
+  return NOISE_PATTERNS.some((p) => p.test(title));
+}
+
 async function fetchRss(source: Source): Promise<NewsItem[]> {
   const res = await fetch(source.feedUrl, {
     headers: { "User-Agent": UA },
@@ -33,6 +70,7 @@ async function fetchRss(source: Source): Promise<NewsItem[]> {
     if (!it.link || !it.title) continue;
     const date = it.isoDate || it.pubDate || new Date().toISOString();
     const title = it.title.trim();
+    if (isNoise(title)) continue;
     items.push({
       id: `${source.id}:${it.link}`,
       sourceId: source.id,
@@ -79,6 +117,7 @@ async function fetchScrape(source: Source): Promise<NewsItem[]> {
     const href = $a.attr("href");
     if (!title || title.length < 8 || !href) return;
     if (/^(mailto:|javascript:|#)/i.test(href)) return;
+    if (isNoise(title)) return;
     items.push({
       id: `${source.id}:${href}`,
       sourceId: source.id,

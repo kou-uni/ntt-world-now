@@ -121,7 +121,8 @@ export const SOURCES: Source[] = [
     homepage: "https://www.ft.com/",
     feedUrl: gnewsRss(
       { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:ft.com (${["NTT", "DOCOMO", "NTT DATA", "Dimension Data"].map((b) => `"${b}"`).join(" OR ")})`)
+      // "Company Announcement" 転載ノイズを除外
+      encodeURIComponent(`site:ft.com ("NTT" OR "DOCOMO" OR "NTT Data" OR "Dimension Data") -"Company Announcement"`)
     ),
     feedType: "rss",
     tier: "T2",
@@ -170,20 +171,7 @@ export const SOURCES: Source[] = [
     region: "global",
     isAggregator: true,
   },
-  {
-    id: "mobile-world-live",
-    name: "Mobile World Live",
-    shortName: "MWL",
-    homepage: "https://www.mobileworldlive.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:mobileworldlive.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T3",
-    region: "global",
-    isAggregator: true,
-  },
+  // (削除: Mobile World Live - site検索が目次ページばかりhit。Phase 3で直接RSSで復活予定)
   {
     id: "capacity-media",
     name: "Capacity Media",
@@ -205,7 +193,8 @@ export const SOURCES: Source[] = [
     homepage: "https://techcrunch.com/",
     feedUrl: gnewsRss(
       { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:techcrunch.com (${["NTT", "DOCOMO", "Dialpad", "Ayar Labs", "ElevenLabs"].map((b) => `"${b}"`).join(" OR ")})`)
+      // VC投資先名（Dialpad/Ayar Labs/ElevenLabs等）はSpotifyノイズを呼ぶので除外
+      encodeURIComponent(`site:techcrunch.com ("NTT" OR "DOCOMO" OR "NTT Data")`)
     ),
     feedType: "rss",
     tier: "T4",
@@ -240,50 +229,11 @@ export const SOURCES: Source[] = [
     region: "global",
     isAggregator: true,
   },
-  {
-    id: "the-information",
-    name: "The Information",
-    shortName: "The Information",
-    homepage: "https://www.theinformation.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:theinformation.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T4",
-    region: "global",
-    isAggregator: true,
-  },
+  // (削除: The Information - 完全有料サイト)
+  // (削除: Seeking Alpha - 99%が目次ノイズ、株価ページ羅列)
+  // (削除: Barron's - NTT直接記事が極めて少ない・ペイウォール強)
 
   // T5 投資・金融
-  {
-    id: "seeking-alpha",
-    name: "Seeking Alpha",
-    shortName: "Seeking Alpha",
-    homepage: "https://seekingalpha.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:seekingalpha.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T5",
-    region: "global",
-    isAggregator: true,
-  },
-  {
-    id: "barrons",
-    name: "Barron's",
-    shortName: "Barron's",
-    homepage: "https://www.barrons.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:barrons.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T5",
-    region: "global",
-    isAggregator: true,
-  },
   {
     id: "nikkei-asia",
     name: "Nikkei Asia",
@@ -299,46 +249,8 @@ export const SOURCES: Source[] = [
     isAggregator: true,
   },
 
-  // T6 VC・思想
-  {
-    id: "stratechery",
-    name: "Stratechery",
-    shortName: "Stratechery",
-    homepage: "https://stratechery.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:stratechery.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T6",
-    region: "global",
-    isAggregator: true,
-  },
-  {
-    id: "a16z",
-    name: "Andreessen Horowitz",
-    shortName: "a16z",
-    homepage: "https://a16z.com/",
-    feedUrl: gnewsRss(
-      { hl: "en-US", gl: "US", ceid: "US:en" },
-      encodeURIComponent(`site:a16z.com (${["NTT", "DOCOMO"].map((b) => `"${b}"`).join(" OR ")})`)
-    ),
-    feedType: "rss",
-    tier: "T6",
-    region: "global",
-    isAggregator: true,
-  },
-  {
-    id: "vc-portfolio-watch",
-    name: "NTT VC投資先ウォッチ",
-    shortName: "VC Watch",
-    homepage: "https://www.nttdocomo-v.com/en/portfolio/",
-    feedUrl: gnewsRss({ hl: "en-US", gl: "US", ceid: "US:en" }, VC_QUERY),
-    feedType: "rss",
-    tier: "T6",
-    region: "global",
-    isAggregator: true,
-  },
+  // T6 VC・思想 (削除: Stratechery 完全有料 / a16z NTT言及ほぼゼロ / VC Watch ノイズ多)
+  //  → 後段の Phase 3 で「中程度品質タブ」を導入する際に復活予定
 
   // ========================================================================
   // NORTH AMERICA
