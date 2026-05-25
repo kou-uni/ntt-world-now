@@ -1,8 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 export async function refreshFeeds(): Promise<{ ok: true; refreshedAt: string }> {
-  updateTag("news");
+  revalidateTag("news");
   return { ok: true, refreshedAt: new Date().toISOString() };
 }
